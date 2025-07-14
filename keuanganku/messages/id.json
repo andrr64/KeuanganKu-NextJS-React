@@ -1,0 +1,9 @@
+{
+  "login.title": "Masuk",
+  "login.welcome": "Hai, Selamat datang kembali 👋",
+  "login.email": "Email",
+  "login.password": "Kata sandi",
+  "login.submit": "Masuk",
+  "login.registerPrompt": "Belum punya akun?",
+  "login.registerLink": "Buat akun"
+}

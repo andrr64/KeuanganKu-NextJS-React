@@ -1,0 +1,9 @@
+{
+  "login.title": "Login",
+  "login.welcome": "Hi, Welcome back 👋",
+  "login.email": "Email",
+  "login.password": "Password",
+  "login.submit": "Login",
+  "login.registerPrompt": "Not registered yet?",
+  "login.registerLink": "Create an account"
+}
