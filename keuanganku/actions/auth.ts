@@ -15,3 +15,8 @@ export async function register(nama: string, email: string, password: string) {
   });
 }
 
+export async function logout() {
+  return fetcher(API_ROUTES.AUTH.LOGOUT, {
+    method: 'POST'
+  });
+}

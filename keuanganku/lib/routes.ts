@@ -4,5 +4,5 @@ export const ROUTES = {
     REGISTER: '/auth/register',
   },
   DASHBOARD: '/dashboard',
-  HOME: '/',
+  HOME: '/app',
 };
