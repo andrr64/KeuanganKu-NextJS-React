@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa'
 import Link from 'next/link'
 import ConfirmDialog from '@/components/dialog/ConfirmDialog';
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 
 const MENU_LIST: {
     label: string
@@ -87,7 +88,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const isActive = (href: string) => pathname === href
 
-    const { theme, setTheme } = useTheme()
     const [loading, setLoading] = useState(false)
     const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -103,7 +103,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.push(ROUTES.AUTH.LOGIN)
         setLoading(false)
     }
-    
+
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-inter transition-colors duration-300">
             {loading && <Loading />}
@@ -172,16 +172,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* MAIN CONTENT */}
             <main className="flex-1 p-6 relative">
-                {/* THEME TOGGLE */}
-                <div className="absolute top-4 right-4">
-                    <button
-                        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                        className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-                    >
-                        {theme === 'light' ? '🌙 Gelap' : '☀️ Terang'}
-                    </button>
-                </div>
-
+                <ThemeToggleButton />
                 {children}
             </main>
         </div>

@@ -2,6 +2,7 @@
 
 import { login } from '@/actions/auth';
 import Loading from '@/components/Loading';
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 import { ROUTES } from '@/lib/routes';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
@@ -9,7 +10,6 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function LoginPage() {
-  const { theme, setTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,16 +33,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 px-4 sm:px-6">
       {loading && <Loading />}
-
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-        >
-          {theme === 'light' ? '🌙 Gelap' : '☀️ Terang'}
-        </button>
-      </div>
-
+      <ThemeToggleButton />
       <div className="w-full max-w-md bg-white dark:bg-gray-800 text-black dark:text-white rounded-lg shadow-md p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-center sm:text-left">
           Login

@@ -7,10 +7,9 @@ import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 
 export default function RegisterPage() {
-  const { theme, setTheme } = useTheme();
-
   const [nama, setNama] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +29,6 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-
       const res = await register(nama, email, password); // ← panggil backend
       toast.success(res.message || 'Pendaftaran berhasil');
       router.push(ROUTES.AUTH.LOGIN);
@@ -45,14 +43,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 px-4 sm:px-6">
       {loading && <Loading />}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-        >
-          {theme === 'light' ? '🌙 Gelap' : '☀️ Terang'}
-        </button>
-      </div>
+      <ThemeToggleButton />
       <div className="w-full max-w-md bg-white dark:bg-gray-800 text-black dark:text-white rounded-xl shadow-md p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Daftar Akun</h1>
         <p className="text-sm mb-6">Silakan isi data untuk mendaftar 📝</p>
