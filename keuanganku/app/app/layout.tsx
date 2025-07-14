@@ -22,6 +22,7 @@ import {
 import Link from 'next/link'
 import ConfirmDialog from '@/components/dialog/ConfirmDialog';
 import { ThemeToggleButton } from '@/components/ThemeToggleButton';
+import toast from 'react-hot-toast';
 
 const MENU_LIST: {
     label: string
@@ -96,12 +97,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
     const handleConfirmLogout = async () => {
-        setConfirmOpen(false)
-        setLoading(true)
-        await new Promise((r) => setTimeout(r, 1000))
-        await logout()
-        router.push(ROUTES.AUTH.LOGIN)
-        setLoading(false)
+        setConfirmOpen(false);
+        setLoading(true);
+        await new Promise((r) => setTimeout(r, 1000));
+        await logout();
+        router.push(ROUTES.AUTH.LOGIN);
+        setLoading(false);
+        toast.success('Berhasil logout');
     }
 
     return (
