@@ -1,6 +1,7 @@
 type APIResponse<T = undefined> = {
     message: string;
     data?: T;
+    success: boolean;
 };
 
 export async function fetcher<T = undefined>(
