@@ -16,11 +16,15 @@ export default function ConfirmDialog({
   onConfirm,
   title = 'Anda yakin ingin logout?',
   description = 'Tindakan ini akan mengakhiri sesi Anda.',
+  cancelText = 'Batal',
+  confirmText = 'Ya, Logout',
 }: {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
   title?: string
+  cancelText?: string
+  confirmText?: string
   description?: string
 }) {
   return (
@@ -61,13 +65,13 @@ export default function ConfirmDialog({
                   onClick={onClose}
                   className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
-                  Batal
+                  {cancelText}
                 </button>
                 <button
                   onClick={onConfirm}
                   className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
                 >
-                  Ya, Logout
+                  {confirmText}
                 </button>
               </div>
             </DialogPanel>
