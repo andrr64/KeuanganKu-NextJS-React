@@ -23,6 +23,7 @@ import Header from './components/Header';
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
 import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
+import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
 
 // Dummy Data (bisa kamu ganti saat integrasi backend)
 const transaksiTerbaru: TransaksiResponse[] = [
@@ -80,6 +81,7 @@ export default function AkunPage() {
   const [isOpenHapusAkun, setIsOpenHapusAkun] = useState(false);
   const [isOpenEditNamaAkun, setIsOpenEditAKun] = useState(false);
   const [idAkunHapus, setIdAkunHapus] = useState<string | null>(null);
+  const [isOpenTambahTransaksi, setIsOpenTambahTransaksi] = useState(false);
 
   const [periode, setPeriode] = useState('bulanan');
   const [filterWaktu, setFilterWaktu] = useState('semua');
@@ -94,8 +96,8 @@ export default function AkunPage() {
   const fetchAkun = async () => {
     const response = await getAllAkun();
     if (response.data) {
-      setListAkun(response.data);
       setIsAkunEmpty(response.data.length === 0);
+      setListAkun(response.data);
     } else {
       setErrorMessage(response.message || 'Gagal memuat data akun.');
     }
@@ -109,8 +111,8 @@ export default function AkunPage() {
     try {
       setLoadingFetch(first);
       await new Promise((res) => setTimeout(res, 500));
-      fetchAkun();
-      fetchTransaksi();
+      await fetchAkun();
+      await fetchTransaksi();
     } catch (error: any) {
       setErrorMessage(error?.message || 'Terjadi kesalahan saat mengambil data.');
     } finally {
@@ -137,6 +139,7 @@ export default function AkunPage() {
     } catch (error: any) {
       toast.error(`Error: ${error.message}`);
     } finally {
+      setIsOpenTambahAkun(false);
       setLoading(false);
     }
   };
@@ -190,6 +193,7 @@ export default function AkunPage() {
   if (isAkunEmpty) {
     return (
       <>
+
         <AddAccountDialog
           isOpen={isOpenTambahAkun}
           isLoading={loading}
@@ -215,7 +219,21 @@ export default function AkunPage() {
         description="Anda yakin ingin menghapus akun ini? Semua transaksi akan dihapus dan tindakan ini tidak dapat dibatalkan."
         onConfirm={() => idAkunHapus && handleHapusAkun(idAkunHapus)}
       />
-
+      <DialogTambahTransaksi
+        isOpen={isOpenTambahTransaksi}
+        isLoading={loading}
+        onClose={() => setIsOpenTambahTransaksi(false)}
+        onSubmit={(data) => {
+          console.log(data);
+          setIsOpenTambahTransaksi(false);
+        }}
+        akunOptions={listAkun}
+        kategoriOptions={[
+          { id: "1", nama: 'Makanan', tipe: 1 },
+          { id: "2", nama: 'Gaji', tipe: 1 },
+          { id: "3", nama: 'Transportasi', tipe: 1 }
+        ]}
+      />
       <EditAccountDialog
         isOpen={isOpenEditNamaAkun}
         isLoading={loading}
@@ -238,7 +256,13 @@ export default function AkunPage() {
       {/* Halaman */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
         <div className="max-w-[1280px] mx-auto">
-          <Header onTambahClick={() => setIsOpenTambahAkun(true)} />
+          <Header
+            fetchData={fetchData}
+            onTambahTransaksiClick={() => {
+              setIsOpenTambahTransaksi(true)
+            }}
+            onTambahAkunClick={() => setIsOpenTambahAkun(true)}
+          />
 
           <ListAkunSection
             listAkun={listAkun}
@@ -251,7 +275,6 @@ export default function AkunPage() {
               setIsOpenHapusAkun(true);
             }}
           />
-
           <section className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
             <TransaksiTerbaruSection
               transaksi={transaksiTerbaru}
