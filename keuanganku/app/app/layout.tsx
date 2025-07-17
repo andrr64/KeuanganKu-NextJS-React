@@ -5,7 +5,7 @@ import { ROUTES } from '@/lib/routes'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Loading from '@/components/Loading'
-import ConfirmDialog from '@/components/dialog/ConfirmDialog'
+import ConfirmDialog from '@/components/dialog/DialogKonfirmasi'
 import { ThemeToggleButton } from '@/components/ThemeToggleButton'
 import {
   FaBars,

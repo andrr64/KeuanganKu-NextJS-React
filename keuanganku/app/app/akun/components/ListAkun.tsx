@@ -3,10 +3,11 @@ import { FaEdit, FaEye, FaTrash, FaWallet } from "react-icons/fa";
 
 type Props = {
   listAkun: AkunResponse[];
+  onEdit: (akun: AkunResponse) => void;
   onHapus: (id: string) => void;
 };
 
-export default function ListAkunSection({ listAkun, onHapus }: Props) {
+export default function ListAkunSection({ listAkun, onEdit, onHapus }: Props) {
     return (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {listAkun.map((akun, idx) => (
@@ -33,6 +34,7 @@ export default function ListAkunSection({ listAkun, onHapus }: Props) {
                             <FaEye className="w-4 h-4" />
                         </button>
                         <button
+                        onClick={() => onEdit(akun)}
                             title="Edit"
                             className="w-8 h-8 flex items-center justify-center rounded-full 
               bg-yellow-100 hover:bg-yellow-200 text-yellow-700 

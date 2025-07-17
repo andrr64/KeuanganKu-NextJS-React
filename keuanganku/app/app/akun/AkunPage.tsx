@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
+  editAkun,
   getAllAkun,
   tambahAkun
 } from '@/actions/akun';
 
 import AddAccountDialog from '@/components/dialog/TambahAkunDialog';
-import ConfirmDialog from '@/components/dialog/ConfirmDialog';
+import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
 import Loading from '@/components/Loading';
 import LoadingP from '@/components/LoadingP';
 import ErrorPage from '@/components/pages/ErrorPage';
@@ -21,6 +22,7 @@ import Header from './components/Header';
 
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
+import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
 
 // Dummy Data (bisa kamu ganti saat integrasi backend)
 const transaksiTerbaru: TransaksiResponse[] = [
@@ -76,35 +78,46 @@ export default function AkunPage() {
 
   const [isOpenTambahAkun, setIsOpenTambahAkun] = useState(false);
   const [isOpenHapusAkun, setIsOpenHapusAkun] = useState(false);
+  const [isOpenEditNamaAkun, setIsOpenEditAKun] = useState(false);
   const [idAkunHapus, setIdAkunHapus] = useState<string | null>(null);
 
   const [periode, setPeriode] = useState('bulanan');
   const [filterWaktu, setFilterWaktu] = useState('semua');
   const [filterAkun, setFilterAkun] = useState('semua');
   const [jenisTransaksi, setJenisTransaksi] = useState(0); // 0 = semua, 1 = keluar, 2 = masuk
+  const [akunYangDiedit, setAkunYangDiedit] = useState<AkunResponse | null>(null);
 
   const akunOptions = ['semua', ...listAkun.map((a) => a.nama)];
   const dataChart = [...pengeluaranList, ...pemasukanList];
 
-  const fetchData = async () => {
+  // Fungsi khusus untuk ambil data akun aja (tanpa set state)
+  const fetchAkun = async () => {
+    const response = await getAllAkun();
+    if (response.data) {
+      setListAkun(response.data);
+      setIsAkunEmpty(response.data.length === 0);
+    } else {
+      setErrorMessage(response.message || 'Gagal memuat data akun.');
+    }
+  };
+
+  const fetchTransaksi = async () => {
+
+  };
+
+  const fetchData = async (first: boolean = false) => {
     try {
-      setLoadingFetch(true);
+      setLoadingFetch(first);
       await new Promise((res) => setTimeout(res, 500));
-
-      const response = await getAllAkun();
-
-      if (response.data) {
-        setListAkun(response.data);
-        setIsAkunEmpty(response.data.length === 0);
-      } else {
-        setErrorMessage(response.message || 'Gagal memuat data akun.');
-      }
+      fetchAkun();
+      fetchTransaksi();
     } catch (error: any) {
-      setErrorMessage(error?.message || 'Terjadi kesalahan saat memuat data akun.');
+      setErrorMessage(error?.message || 'Terjadi kesalahan saat mengambil data.');
     } finally {
       setLoadingFetch(false);
     }
   };
+
 
   const handleAkunBaru = async (data: { nama: string; saldoAwal: number }) => {
     if (!data.nama.trim()) return toast.error('Nama akun tidak boleh kosong.');
@@ -115,7 +128,6 @@ export default function AkunPage() {
 
     try {
       const response = await tambahAkun(data.nama.trim(), data.saldoAwal);
-
       if (response.success) {
         toast.success('Akun berhasil ditambahkan.');
         fetchData();
@@ -128,6 +140,29 @@ export default function AkunPage() {
       setLoading(false);
     }
   };
+
+  const handleEditNamaAkun = async (id: string, namaBaru: String) => {
+    if (!namaBaru.trim()) return toast.error('Nama akun tidak boleh kosong.');
+
+    setLoading(true);
+    await new Promise((res) => setTimeout(res, 1000));
+
+    try {
+      const response = await editAkun(id, namaBaru);
+
+      if (response.success) {
+        setIsOpenEditAKun(false);
+        toast.success('Akun berhasil ditambahkan.');
+        fetchData(false);
+      } else {
+        toast.error(response.message || 'Gagal menambahkan akun.');
+      }
+    } catch (error: any) {
+      toast.error(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleHapusAkun = async (id: string) => {
     setLoading(true);
@@ -146,7 +181,7 @@ export default function AkunPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
 
   if (errorMessage) return <ErrorPage message={errorMessage} />;
@@ -181,6 +216,18 @@ export default function AkunPage() {
         onConfirm={() => idAkunHapus && handleHapusAkun(idAkunHapus)}
       />
 
+      <EditAccountDialog
+        isOpen={isOpenEditNamaAkun}
+        isLoading={loading}
+        akun={akunYangDiedit}
+        onClose={() => {
+          setAkunYangDiedit(null);
+          setIsOpenEditAKun(false);
+        }}
+        onSubmit={(idAkun: string, namaBaru: string) => {
+          handleEditNamaAkun(idAkun, namaBaru);
+        }} />
+
       <AddAccountDialog
         isOpen={isOpenTambahAkun}
         isLoading={loading}
@@ -195,6 +242,10 @@ export default function AkunPage() {
 
           <ListAkunSection
             listAkun={listAkun}
+            onEdit={(akun) => {
+              setAkunYangDiedit(akun);
+              setIsOpenEditAKun(true);
+            }}
             onHapus={(id) => {
               setIdAkunHapus(id);
               setIsOpenHapusAkun(true);
