@@ -24,6 +24,7 @@ import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
 import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
 import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
+import { tambahTransaksi, TambahTransaksiParams } from '@/actions/transaksi';
 
 // Dummy Data (bisa kamu ganti saat integrasi backend)
 const transaksiTerbaru: TransaksiResponse[] = [
@@ -183,6 +184,24 @@ export default function AkunPage() {
     }
   };
 
+  const handleTambahTransaksi = async (data: TambahTransaksiParams) => {
+    setLoading(true);
+    console.log(data);
+    try {
+      const response = await tambahTransaksi(data);
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      setIsOpenTambahTransaksi(false);
+      toast.success("Transaksi berhasil ditambahkan");
+    } catch (e: any) {
+      toast.error(`Error: ${e.message}`);
+    } finally {
+      setLoading(false);
+      fetchData();
+    }
+  }
+
   useEffect(() => {
     fetchData(true);
   }, []);
@@ -224,15 +243,9 @@ export default function AkunPage() {
         isLoading={loading}
         onClose={() => setIsOpenTambahTransaksi(false)}
         onSubmit={(data) => {
-          console.log(data);
-          setIsOpenTambahTransaksi(false);
+          handleTambahTransaksi(data);
         }}
         akunOptions={listAkun}
-        kategoriOptions={[
-          { id: "1", nama: 'Makanan', tipe: 1 },
-          { id: "2", nama: 'Gaji', tipe: 1 },
-          { id: "3", nama: 'Transportasi', tipe: 1 }
-        ]}
       />
       <EditAccountDialog
         isOpen={isOpenEditNamaAkun}
@@ -257,7 +270,7 @@ export default function AkunPage() {
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
         <div className="max-w-[1280px] mx-auto">
           <Header
-            fetchData={fetchData}
+            fetchData={() => fetchData(false)}
             onTambahTransaksiClick={() => {
               setIsOpenTambahTransaksi(true)
             }}
