@@ -8,15 +8,15 @@ interface HeaderProps {
   onTambahTransaksiClick: () => void;
 }
 
-export default function Header({ 
-  onTambahAkunClick: onTambahClick, 
+export default function Header({
+  onTambahAkunClick: onTambahClick,
   fetchData: fetchDataCallback,
   onTambahTransaksiClick
 }: HeaderProps) {
   return (
     <header className="mb-6">
       <div className="flex flex-col sm:items-start sm:justify-between gap-4">
-        <h1 className="text-lg font-semibold leading-6">Akun Saya</h1>
+        <h1 className="text-2xl font-bold">Akun</h1>
 
         <div className="flex flex-wrap gap-3">
           {/* Tambah Transaksi */}
