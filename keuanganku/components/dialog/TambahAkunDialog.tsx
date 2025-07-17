@@ -32,6 +32,7 @@ export default function AddAccountDialog({
 
     return (
         <>
+            {isLoading && <Loading/>}
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={onClose}>
                     <TransitionChild
