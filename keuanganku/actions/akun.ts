@@ -21,3 +21,10 @@ export const hapusAkun = async (id: string) => {
         body: JSON.stringify({ idAkun: id }),
     });
 }
+
+export const editAkun = async(id: string, nama: String) => {
+    return fetcher(API_ROUTES.AKUN.UPDATE_NAMA(id), {
+        method: "PUT",
+        body: JSON.stringify({nama})
+    });
+}
