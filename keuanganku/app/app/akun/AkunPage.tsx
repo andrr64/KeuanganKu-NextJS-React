@@ -18,7 +18,7 @@ import ListAkunSection from './components/ListAkun';
 import TransaksiTerbaruSection from './components/TransaksiTerbaru';
 import RingkasanUangSection from './components/RingkasanUang';
 import EmptyAkunState from './components/EmptyAkunState';
-import Header from './components/Header';
+import Header from './components/HeaderAkun';
 
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
