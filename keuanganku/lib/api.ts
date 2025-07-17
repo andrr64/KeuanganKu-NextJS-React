@@ -12,4 +12,14 @@ export const API_ROUTES = {
     UPDATE_NAMA: (idAkun: string) => `${API_BASE_URL}/secure/akun/update-nama/${idAkun}`, // PUT
     HAPUS:(idAkun: string) => `${API_BASE_URL}/secure/akun/${idAkun}`, // DELETE
   },
+
+  KATEGORI: {
+    GET_PENGELUARAN: `${API_BASE_URL}/secure/kategori/1`,
+    GET_PEMASUKAN: `${API_BASE_URL}/secure/kategori/2`,
+    GET_ALLL: `${API_BASE_URL}/secure/kategori`,
+  },
+
+  TRANSAKSI: {
+    TAMBAH: `${API_BASE_URL}/secure/transaksi`
+  }
 };
