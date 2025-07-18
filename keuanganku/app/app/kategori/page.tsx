@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import KategoriPage from "./KategoriPage";
 
-export const metdata: Metadata = {
+export const metadata: Metadata = {
     title: 'Kategori | KeuanganKu',
     description: 'Kategori'
 }
