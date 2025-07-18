@@ -1,44 +1,42 @@
 'use client'
 
+import LoadingP from '@/components/LoadingP'
+import { KategoriResponse } from '@/types/kategori'
 import { useState, useEffect } from 'react'
 import { FaTimes } from 'react-icons/fa'
 
-type Kategori = {
-    id: string
-    nama: string
-    jenis: 'PEMASUKAN' | 'PENGELUARAN'
-}
-
 type Props = {
-    onPilihKategori: (kategori: Kategori) => void
+    onPilihKategori: (kategori: KategoriResponse) => void
 }
 
 export default function ListKategori({ onPilihKategori }: Props) {
-    const [kategoriList, setKategoriList] = useState<Kategori[]>([])
-    const [filterJenis, setFilterJenis] = useState<'SEMUA' | 'PEMASUKAN' | 'PENGELUARAN'>('SEMUA')
+    const [kategoriList, setKategoriList] = useState<KategoriResponse[]>([])
+    const [filterJenis, setFilterJenis] = useState<0 | 1 | 2>(0)
     const [searchKeyword, setSearchKeyword] = useState('')
-    const [kategoriTersaring, setKategoriTersaring] = useState<Kategori[]>([])
+    const [kategoriTersaring, setKategoriTersaring] = useState<KategoriResponse[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
 
     const fetchData = async () => {
+        setLoading(true)
         await new Promise(resolve => setTimeout(resolve, 500)) // simulasi delay
         setKategoriList([
-            { id: '1', nama: 'Gaji', jenis: 'PEMASUKAN' },
-            { id: '2', nama: 'Makanan', jenis: 'PENGELUARAN' },
-            { id: '3', nama: 'Transportasi', jenis: 'PENGELUARAN' },
-            { id: '4', nama: 'Bonus', jenis: 'PEMASUKAN' },
-            { id: '5', nama: 'Investasi', jenis: 'PEMASUKAN' },
+            { id: '1', nama: 'Gaji', jenis: 2 },
+            { id: '2', nama: 'Makanan', jenis: 1 },
+            { id: '3', nama: 'Transportasi', jenis: 1 },
+            { id: '4', nama: 'Bonus', jenis: 2 },
+            { id: '5', nama: 'Investasi', jenis: 2 },
         ])
+        setLoading(false)
     }
 
     useEffect(() => {
         fetchData()
     }, [])
 
-    // ⛏️ Filtering handler
     const filterData = () => {
         let filtered = [...kategoriList]
 
-        if (filterJenis !== 'SEMUA') {
+        if (filterJenis !== 0) {
             filtered = filtered.filter(k => k.jenis === filterJenis)
         }
 
@@ -64,10 +62,10 @@ export default function ListKategori({ onPilihKategori }: Props) {
     }
 
     return (
-        <div className="bg-white h-[512px] dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors w-full">
             <div className="mb-4 flex flex-col gap-2">
                 <div>
-                    <h2 className="text-md font-semibold">Kategori</h2>
+                    <h2 className="text-md font-semibold">Data</h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                         Manajemen kategori pemasukan dan pengeluaran
                     </p>
@@ -85,12 +83,12 @@ export default function ListKategori({ onPilihKategori }: Props) {
                         <select
                             id="filterJenis"
                             value={filterJenis}
-                            onChange={(e) => setFilterJenis(e.target.value as any)}
+                            onChange={(e) => setFilterJenis(Number(e.target.value) as 0 | 1 | 2)}
                             className="focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
                         >
-                            <option value="SEMUA">Semua Jenis</option>
-                            <option value="PEMASUKAN">Pemasukan</option>
-                            <option value="PENGELUARAN">Pengeluaran</option>
+                            <option value={0}>Semua Jenis</option>
+                            <option value={1}>Pengeluaran</option>
+                            <option value={2}>Pemasukan</option>
                         </select>
                     </div>
 
@@ -114,7 +112,7 @@ export default function ListKategori({ onPilihKategori }: Props) {
                             {searchKeyword && (
                                 <button
                                     onClick={handleClearSearch}
-                                    className="absolute right-2 top-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-white"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-white"
                                 >
                                     <FaTimes className="w-4 h-4" />
                                 </button>
@@ -126,7 +124,11 @@ export default function ListKategori({ onPilihKategori }: Props) {
 
             {/* LIST */}
             <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto max-h-[400px]">
-                {kategoriTersaring.length === 0 ? (
+                {loading ? (
+                    <li className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
+                        <LoadingP />
+                    </li>
+                ) : kategoriTersaring.length === 0 ? (
                     <li className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
                         Tidak ada kategori.
                     </li>
@@ -140,12 +142,12 @@ export default function ListKategori({ onPilihKategori }: Props) {
                             <div>
                                 <p className="font-medium text-sm">{kategori.nama}</p>
                                 <p
-                                    className={`text-xs font-medium ${kategori.jenis === 'PEMASUKAN'
+                                    className={`text-xs font-medium ${kategori.jenis === 2
                                         ? 'text-green-500'
                                         : 'text-red-500'
                                         }`}
                                 >
-                                    {kategori.jenis}
+                                    {kategori.jenis === 1 ? 'Pengeluaran' : 'Pemasukan'}
                                 </p>
                             </div>
                         </li>

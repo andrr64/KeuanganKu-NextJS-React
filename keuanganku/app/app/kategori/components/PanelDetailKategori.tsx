@@ -1,14 +1,15 @@
 'use client'
+import { KategoriResponse } from '@/types/kategori'
 import { useState, useEffect } from 'react'
-import { Kategori } from '../KategoriPage'
 
 type Props = {
-    kategori: Kategori | null
+    kategori: KategoriResponse | null
+    onCancel: () => void
 }
 
-export default function PanelDetailKategori({ kategori }: Props) {
+export default function PanelDetailKategori({ kategori, onCancel }: Props) {
     const [nama, setNama] = useState('')
-    const [jenis, setJenis] = useState<'PEMASUKAN' | 'PENGELUARAN'>('PEMASUKAN')
+    const [jenis, setJenis] = useState<0 | 1 | 2>(0)
 
     useEffect(() => {
         if (kategori) {
@@ -55,15 +56,22 @@ export default function PanelDetailKategori({ kategori }: Props) {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis</label>
                     <select
                         value={jenis}
-                        onChange={(e) => setJenis(e.target.value as any)}
+                        onChange={(e) => setJenis(Number(e.target.value) as 1 | 2)}
                         className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white"
                     >
-                        <option value="PEMASUKAN">Pemasukan</option>
-                        <option value="PENGELUARAN">Pengeluaran</option>
+                        <option value={1}>Pengeluaran</option>
+                        <option value={2}>Pemasukan</option>
                     </select>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-4">
+                <div className="flex justify-end gap-3 mt-4 flex-wrap">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 rounded-md bg-gray-300 text-gray-800 hover:bg-gray-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500 transition text-sm"
+                    >
+                        Cancel
+                    </button>
+
                     <button
                         onClick={handleHapus}
                         className="px-4 py-2 rounded-md bg-rose-600 text-white hover:bg-rose-700 transition text-sm"
