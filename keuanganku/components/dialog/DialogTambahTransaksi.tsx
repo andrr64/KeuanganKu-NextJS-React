@@ -261,15 +261,6 @@ export default function DialogTambahTransaksi({
                                                 className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                 required
                                             />
-
-                                            <input
-                                                type="text"
-                                                value={tanggal}
-                                                onChange={(e) => setTanggal(e.target.value)}
-                                                className="..."
-                                                placeholder="mm/dd/yyyy hh:mm"
-                                            />
-
                                             <button
                                                 type="button"
                                                 onClick={handleSekarang}
