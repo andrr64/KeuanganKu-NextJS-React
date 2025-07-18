@@ -7,10 +7,10 @@ import {
   getAllAkun,
   tambahAkun
 } from '@/actions/akun';
-
+import { ambilTransaksi } from '@/actions/transaksi';
+import { format } from 'date-fns';
 import AddAccountDialog from '@/components/dialog/TambahAkunDialog';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
-import Loading from '@/components/Loading';
 import LoadingP from '@/components/LoadingP';
 import ErrorPage from '@/components/pages/ErrorPage';
 
@@ -25,40 +25,6 @@ import { TransaksiResponse } from '@/types/transaksi';
 import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
 import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
 import { tambahTransaksi, TambahTransaksiParams } from '@/actions/transaksi';
-
-// Dummy Data (bisa kamu ganti saat integrasi backend)
-const transaksiTerbaru: TransaksiResponse[] = [
-  {
-    id: '1',
-    idAkun: 'akun-1',
-    namaKategori: 'Gaji',
-    namaAkun: 'Bank BCA',
-    jenisTransaksi: 2,
-    jumlah: 5000000,
-    catatan: 'Gaji Bulanan',
-    tanggal: '2025-07-15T09:00:00',
-  },
-  {
-    id: '2',
-    idAkun: 'akun-2',
-    namaKategori: 'Makanan',
-    namaAkun: 'OVO',
-    jenisTransaksi: 1,
-    jumlah: 75000,
-    catatan: 'Bayar Makanan',
-    tanggal: '2025-07-14T13:45:00',
-  },
-  {
-    id: '3',
-    idAkun: 'akun-3',
-    namaKategori: 'Pulsa',
-    namaAkun: 'Dompet Cash',
-    jenisTransaksi: 1,
-    jumlah: 50000,
-    catatan: 'Isi Pulsa',
-    tanggal: '2025-07-13T20:10:00',
-  },
-];
 
 const pengeluaranList = [
   { label: 'Makanan', value: 1500000, warna: '#F87171' },
@@ -90,8 +56,15 @@ export default function AkunPage() {
   const [jenisTransaksi, setJenisTransaksi] = useState(0); // 0 = semua, 1 = keluar, 2 = masuk
   const [akunYangDiedit, setAkunYangDiedit] = useState<AkunResponse | null>(null);
 
+  const [listPengeluaran, setListPengeluaran] = useState<TransaksiResponse[]>([]);
+  const [listPemasukan, setListPemasukan] = useState<TransaksiResponse[]>([]);
+  const [transaksiTerbaru, setTransaksiTerbaru] = useState<TransaksiResponse[]>([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const akunOptions = ['semua', ...listAkun.map((a) => a.nama)];
-  const dataChart = [...pengeluaranList, ...pemasukanList];
 
   // Fungsi khusus untuk ambil data akun aja (tanpa set state)
   const fetchAkun = async () => {
@@ -105,7 +78,57 @@ export default function AkunPage() {
   };
 
   const fetchTransaksi = async () => {
+    const now = new Date();
+    let startDate: string;
+    const endDate = format(now, 'dd/MM/yyyy');
 
+    if (filterWaktu === 'hari') {
+      startDate = format(now, 'dd/MM/yyyy');
+    } else if (filterWaktu === 'minggu') {
+      const tujuhHariLalu = new Date(now);
+      tujuhHariLalu.setDate(now.getDate() - 6);
+      startDate = format(tujuhHariLalu, 'dd/MM/yyyy');
+    } else if (filterWaktu === 'bulan') {
+      const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate = format(awalBulan, 'dd/MM/yyyy');
+    } else if (filterWaktu === 'tahun') {
+      const awalTahun = new Date(now.getFullYear(), 0, 1);
+      startDate = format(awalTahun, 'dd/MM/yyyy');
+    } else {
+      const defaultAwal = new Date(2000, 0, 1);
+      startDate = format(defaultAwal, 'dd/MM/yyyy');
+    }
+
+    try {
+      const res = await ambilTransaksi({
+        startDate,
+        endDate,
+        jenis: jenisTransaksi === 0 ? undefined : jenisTransaksi,
+        idAkun:
+          filterAkun !== 'semua'
+            ? listAkun.find((a) => a.nama === filterAkun)?.id
+            : undefined,
+        page,
+        size,
+        search: searchQuery || '',
+      });
+
+      if (!res.success) throw new Error(res.message);
+
+      const result = res.data!;
+      const semuaTransaksi: TransaksiResponse[] = result.content;
+
+      const pengeluaran = semuaTransaksi.filter((t) => t.jenisTransaksi === 1);
+      const pemasukan = semuaTransaksi.filter((t) => t.jenisTransaksi === 2);
+
+      setTransaksiTerbaru(semuaTransaksi);
+      setListPengeluaran(pengeluaran);
+      setListPemasukan(pemasukan);
+      setTotalPages(result.totalPages);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(err.message || 'Gagal memuat data transaksi');
+    }
   };
 
   const fetchData = async (first: boolean = false) => {
@@ -194,6 +217,7 @@ export default function AkunPage() {
       }
       setIsOpenTambahTransaksi(false);
       toast.success("Transaksi berhasil ditambahkan");
+      fetchData(false);
     } catch (e: any) {
       toast.error(`Error: ${e.message}`);
     } finally {
@@ -205,6 +229,20 @@ export default function AkunPage() {
   useEffect(() => {
     fetchData(true);
   }, []);
+
+  useEffect(() => {
+    fetchTransaksi();
+  }, [filterWaktu, filterAkun, jenisTransaksi, page, size]);
+
+  useEffect(() => {
+    fetchTransaksi();
+    setPage(0);
+  }, [searchQuery])
+
+  useEffect(() => {
+    setPage(0);
+  }, [filterWaktu, filterAkun, jenisTransaksi, size]);
+
 
   if (errorMessage) return <ErrorPage message={errorMessage} />;
   if (loadingFetch) return <LoadingP />;
@@ -298,7 +336,15 @@ export default function AkunPage() {
               setFilterWaktu={setFilterWaktu}
               setFilterAkun={setFilterAkun}
               setJenisTransaksi={setJenisTransaksi}
+              page={page}
+              setPage={setPage}
+              totalPages={totalPages}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery} 
+              size={size} 
+              setSize={setSize}
             />
+
 
             <RingkasanUangSection
               periode={periode}

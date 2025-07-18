@@ -20,7 +20,7 @@ export default function RingkasanUangSection({
     const dataChart = [...pengeluaranList, ...pemasukanList];
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors self-start h-fit">
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <h2 className="text-md font-semibold">Ringkasan Keuangan</h2>
