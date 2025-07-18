@@ -17,6 +17,7 @@ export const API_ROUTES = {
     GET_PENGELUARAN: `${API_BASE_URL}/secure/kategori/1`,
     GET_PEMASUKAN: `${API_BASE_URL}/secure/kategori/2`,
     GET_ALLL: `${API_BASE_URL}/secure/kategori`,
+    FILTERE: `${API_BASE_URL}/secure/kategori/filter`,
   },
 
   TRANSAKSI: {
