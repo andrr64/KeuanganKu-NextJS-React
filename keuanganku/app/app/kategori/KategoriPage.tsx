@@ -51,14 +51,15 @@ export default function KategoriPage() {
             />
 
             {/* MAIN LAYOUT */}
-            <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8 min-h-screen">
-                <div className="max-w-screen-lg mx-auto">
+            <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
+                <div className="max-w-[1280px] mx-auto">
                     <HeaderKategori
-                        onTambahKategoriClick={() => { }}
+                        onTambahKategoriClick={() => {
+                            
+                        }}
                         fetchData={fetchData}
                     />
-
-                    <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <section className="grid grid-cols-1 gap-6 mt-6">
                         <ListKategori onPilihKategori={handlePilihKategori} />
                     </section>
                 </div>
