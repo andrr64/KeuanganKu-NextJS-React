@@ -17,7 +17,9 @@ export const API_ROUTES = {
     GET_PENGELUARAN: `${API_BASE_URL}/secure/kategori/1`,
     GET_PEMASUKAN: `${API_BASE_URL}/secure/kategori/2`,
     GET_ALLL: `${API_BASE_URL}/secure/kategori`,
-    FILTERE: `${API_BASE_URL}/secure/kategori/filter`,
+    FILTER: `${API_BASE_URL}/secure/kategori/filter`,
+    POST: `${API_BASE_URL}/secure/kategori`,
+    UPDATE: (idKategori: string) => `${API_BASE_URL}/secure/kategori/${idKategori}`
   },
 
   TRANSAKSI: {

@@ -16,7 +16,7 @@ type Props = {
     isLoading: boolean
     kategori: KategoriResponse | null
     onClose: () => void
-    onSubmit: (id: string, nama: string, jenis: 1 | 2) => void
+    onSubmit: (id: string, nama: string) => void
     onDelete: (id: string) => void
 }
 
@@ -29,19 +29,17 @@ export default function DialogEditKategori({
     onDelete
 }: Props) {
     const [nama, setNama] = useState('')
-    const [jenis, setJenis] = useState<1 | 2>(1)
 
     useEffect(() => {
         if (kategori) {
             setNama(kategori.nama)
-            setJenis(kategori.jenis)
         }
     }, [kategori])
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!kategori) return
-        onSubmit(kategori.id, nama.trim(), jenis)
+        onSubmit(kategori.id, nama.trim())
     }
 
     const handleDelete = () => {
@@ -51,7 +49,6 @@ export default function DialogEditKategori({
 
     return (
         <>
-            {isLoading && <Loading />}
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={onClose}>
                     <TransitionChild
@@ -97,21 +94,6 @@ export default function DialogEditKategori({
                                             className="w-full text-sm px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             required
                                         />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="jenis" className="block text-xs font-medium text-gray-700 dark:text-white mb-1">
-                                            Jenis Kategori
-                                        </label>
-                                        <select
-                                            id="jenis"
-                                            value={jenis}
-                                            onChange={(e) => setJenis(Number(e.target.value) as 1 | 2)}
-                                            className="w-full text-sm px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                                        >
-                                            <option value={1}>Pengeluaran</option>
-                                            <option value={2}>Pemasukan</option>
-                                        </select>
                                     </div>
 
                                     <div className="flex justify-between pt-4">
