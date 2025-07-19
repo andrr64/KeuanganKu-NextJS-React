@@ -306,7 +306,7 @@ export default function AkunPage() {
 
       {/* Halaman */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
-        <div className="max-w-[1280px] mx-auto">
+        <div className='max-w-[1280px] mx-auto md:mx-0'>
           <Header
             fetchData={() => fetchData(false)}
             onTambahTransaksiClick={() => {
@@ -340,8 +340,8 @@ export default function AkunPage() {
               setPage={setPage}
               totalPages={totalPages}
               searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery} 
-              size={size} 
+              setSearchQuery={setSearchQuery}
+              size={size}
               setSize={setSize}
             />
 
