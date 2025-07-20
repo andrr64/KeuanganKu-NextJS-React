@@ -1,6 +1,6 @@
 'use client'
 
-import { getFilteredGoal, kurangiUangGoal, tambahGoal, tambahUangGoal, updateGoal, updateStatus } from '@/actions/goal'
+import { getFilteredGoal, hapusGoal, kurangiUangGoal, tambahGoal, tambahUangGoal, updateGoal, updateStatus } from '@/actions/goal'
 import { GoalResponse } from '@/types/goal'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -9,9 +9,10 @@ import GoalHeader from './componentns/Header'
 import DialogTambahGoal from '@/components/dialog/DialogTambahGoal'
 import DialogEditGoal from '@/components/dialog/DialogEditGoal'
 import DialogTambahUangGoal from '@/components/dialog/DialogTambahUangGoal'
-import GoalItem from './componentns/GoalItem'
+import GoalItem from '../../../components/items/GoalItem'
 import { handleApiAction } from '@/lib/api'
 import DialogKurangiUangGoal from '@/components/dialog/DialogKurangiUangGoal'
+import ConfirmDialog from '@/components/dialog/DialogKonfirmasi'
 
 const formatRupiah = (val: number) => Intl.NumberFormat('id-ID').format(val)
 
@@ -27,6 +28,7 @@ export default function GoalPage() {
   const [isOpenEdit, setIsOpenEdit] = useState(false)
   const [isOpenTambahUang, setIsOpenTambahUang] = useState(false)
   const [isOpenKurangiUang, setIsOpenKurangiUang] = useState(false)
+  const [isOpenHapus, setIsOpenHapus] = useState(false)
 
   const [selectedGoal, setSelectedGoal] = useState<GoalResponse | null>(null)
 
@@ -121,12 +123,39 @@ export default function GoalPage() {
       onFinally: () => setLoading(false),
     })
   }
+
+  const handleHapus = () => {
+    if (!selectedGoal) return
+    setLoading(true)
+
+    handleApiAction({
+      action: () => hapusGoal(selectedGoal.id),
+      successMessage: 'Uang berhasil dihapus',
+      onSuccess: () => {
+        fetchData()
+        setSelectedGoal(null)
+        setIsOpenHapus(false)
+      },
+      onFinally: () => setLoading(false),
+    })
+  }
+
   useEffect(() => {
     fetchData()
   }, [page, size, searchKeyword, filterTercapai])
 
   return (
     <>
+      <ConfirmDialog
+        isOpen={isOpenHapus}
+        title='Hapus Goal'
+        description='Anda yakin? data tidak bisa dikembalikan.'
+        confirmText='Ya, hapus'
+        onClose={() => setIsOpenHapus(false)}
+        onConfirm={() => {
+          if (selectedGoal) handleHapus()
+        }}
+      />
       <DialogTambahGoal
         isOpen={isOpenTambah}
         isLoading={loading}
@@ -257,6 +286,10 @@ export default function GoalPage() {
                       onTambahUang={() => {
                         setSelectedGoal(goal)
                         setIsOpenTambahUang(true)
+                      }}
+                      onHapus={() => {
+                        setSelectedGoal(goal);
+                        setIsOpenHapus(true);
                       }}
                     />
                   )

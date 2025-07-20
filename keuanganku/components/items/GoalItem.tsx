@@ -1,5 +1,5 @@
 import { GoalResponse } from '@/types/goal'
-import { FaCheckCircle, FaPlus, FaMinus } from 'react-icons/fa'
+import { FaCheckCircle, FaPlus, FaMinus, FaTrash } from 'react-icons/fa'
 
 interface GoalItemProps {
     goal: GoalResponse
@@ -10,6 +10,7 @@ interface GoalItemProps {
     onCheckPress: (goal: GoalResponse) => void
     onTambahUang: () => void
     onKurangiUang: () => void // ✅ Tambahkan prop baru
+    onHapus: () => void
 }
 
 export default function GoalItem({
@@ -20,7 +21,8 @@ export default function GoalItem({
     onEdit,
     onCheckPress,
     onTambahUang,
-    onKurangiUang // ✅ Terima prop baru
+    onKurangiUang,
+    onHapus
 }: GoalItemProps) {
     return (
         <li
@@ -83,7 +85,7 @@ export default function GoalItem({
                         </button>
 
                         <button
-                            className="text-xs px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white flex items-center gap-1 font-medium transition-all"
+                            className="text-xs px-3 py-1.5 rounded-md bg-red-800 hover:bg-red-900 text-white flex items-center gap-1 font-medium transition-all"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 onKurangiUang()
@@ -91,6 +93,17 @@ export default function GoalItem({
                         >
                             <FaMinus className="text-sm" />
                             Kurangi Uang
+                        </button>
+
+                        <button
+                            className="text-xs px-3 py-1.5 rounded-md bg-red-800 hover:bg-red-900 text-white flex items-center gap-1 font-medium transition-all"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onHapus()
+                            }}
+                        >
+                            <FaTrash className="text-sm" />
+                            Hapus
                         </button>
                     </div>
                 </div>

@@ -76,3 +76,9 @@ export async function kurangiUangGoal(params: {id: string, uang: number}){
         body: JSON.stringify({uang: params.uang})
     })
 }
+
+export async function hapusGoal(id: string){
+    return fetcher(API_ROUTES.GOAL.HAPUS(id), {
+        method: 'DELETE'
+    })
+}

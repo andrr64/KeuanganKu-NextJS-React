@@ -29,6 +29,7 @@ export const API_ROUTES = {
   GOAL: {
     POST: `${API_BASE_URL}/secure/goal`,
     GET: `${API_BASE_URL}/secure/goal/filter`,
+    HAPUS: (id: string) => `${API_BASE_URL}/secure/goal/${id}`,
     PUT: (id: string) => `${API_BASE_URL}/secure/goal/${id}`,
     PUT_STATUS: (id: string) => `${API_BASE_URL}/secure/goal/${id}/set-status`,
     PUT_TAMBAH_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/tambah-uang`,
