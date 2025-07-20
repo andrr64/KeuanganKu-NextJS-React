@@ -2,9 +2,9 @@ import { AkunResponse } from "@/types/akun";
 import { FaEdit, FaEye, FaTrash, FaWallet } from "react-icons/fa";
 
 type Props = {
-  listAkun: AkunResponse[];
-  onEdit: (akun: AkunResponse) => void;
-  onHapus: (id: string) => void;
+    listAkun: AkunResponse[];
+    onEdit: (akun: AkunResponse) => void;
+    onHapus: (id: string) => void;
 };
 
 export default function ListAkunSection({ listAkun, onEdit, onHapus }: Props) {
@@ -25,16 +25,16 @@ export default function ListAkunSection({ listAkun, onEdit, onHapus }: Props) {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <button
+                        {/* <button
                             title="Lihat"
                             className="w-8 h-8 flex items-center justify-center rounded-full 
               bg-blue-100 hover:bg-blue-200 text-blue-700 
               dark:bg-blue-900 dark:hover:bg-blue-800 dark:text-blue-300 transition"
                         >
                             <FaEye className="w-4 h-4" />
-                        </button>
+                        </button> */}
                         <button
-                        onClick={() => onEdit(akun)}
+                            onClick={() => onEdit(akun)}
                             title="Edit"
                             className="w-8 h-8 flex items-center justify-center rounded-full 
               bg-yellow-100 hover:bg-yellow-200 text-yellow-700 

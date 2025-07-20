@@ -1,5 +1,6 @@
 'use client';
 
+import TransaksiItem from '@/components/items/TransaksiItem';
 import { TransaksiResponse } from '@/types/transaksi';
 import { useEffect, useState } from 'react';
 
@@ -168,26 +169,10 @@ export default function TransaksiTerbaruSection({
           </li>
         ) : (
           transaksi.map((trx) => (
-            <li key={trx.id} className="py-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">{trx.namaKategori}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {trx.namaAkun} •{' '}
-                  {new Date(trx.tanggal).toLocaleString('id-ID', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-              <div
-                className={`text-sm font-semibold ${trx.jenisTransaksi === 2 ? 'text-green-500' : 'text-red-500'}`}
-              >
-                {trx.jenisTransaksi === 2 ? '+' : '-'} Rp {trx.jumlah.toLocaleString('id-ID')}
-              </div>
-            </li>
+            <TransaksiItem 
+              key={trx.id}
+              transaksi={trx}            
+            />
           ))
         )}
       </ul>
