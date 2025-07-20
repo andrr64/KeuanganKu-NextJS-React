@@ -24,7 +24,9 @@ export const API_ROUTES = {
 
   TRANSAKSI: {
     TAMBAH: `${API_BASE_URL}/secure/transaksi`,
-    FILTER: `${API_BASE_URL}/secure/transaksi`
+    FILTER: `${API_BASE_URL}/secure/transaksi`,
+    PUT: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`,
+    DELETE: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`
   },
   GOAL: {
     POST: `${API_BASE_URL}/secure/goal`,

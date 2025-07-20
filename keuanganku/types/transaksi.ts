@@ -1,3 +1,5 @@
+import { KategoriResponse } from "./kategori";
+
 export interface TransaksiResponse {
     id: string;
     idAkun: string;
@@ -7,4 +9,5 @@ export interface TransaksiResponse {
     jumlah: number;
     catatan: string;
     tanggal: string;
+    kategori: KategoriResponse;
 }

@@ -17,3 +17,22 @@ export function formatTanggalMMDDYYYY(date: string | Date): string {
 
   return `${tanggal}/${bulan}/${tahun} ${jam}:${menit}`;
 }
+
+export function parseTanggalFromMMDDYYYY(dateString: string): Date {
+  // Split the date and time parts
+  const [datePart, timePart] = dateString.split(' ');
+  
+  // Split day, month, year
+  const [day, month, year] = datePart.split('/').map(Number);
+  
+  // Split hours, minutes if time exists
+  let hours = 0;
+  let minutes = 0;
+  
+  if (timePart) {
+    [hours, minutes] = timePart.split(':').map(Number);
+  }
+
+  // Note: month is 0-based in Date constructor
+  return new Date(year, month - 1, day, hours, minutes);
+}
