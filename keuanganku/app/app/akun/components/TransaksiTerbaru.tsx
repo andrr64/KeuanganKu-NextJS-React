@@ -20,6 +20,8 @@ interface Props {
   setSearchQuery: (value: string) => void;
   size: number;
   setSize: (s: number) => void;
+  onClickTrx: (trx: TransaksiResponse) => void;
+  onDelete: (trx: TransaksiResponse) => void;
 }
 
 export default function TransaksiTerbaruSection({
@@ -37,7 +39,9 @@ export default function TransaksiTerbaruSection({
   searchQuery,
   setSearchQuery,
   size,
-  setSize
+  setSize,
+  onClickTrx,
+  onDelete
 }: Props) {
 
   return (
@@ -171,6 +175,10 @@ export default function TransaksiTerbaruSection({
           transaksi.map((trx) => (
             <TransaksiItem 
               key={trx.id}
+              onClickTrx={() => {
+                onClickTrx(trx);
+              }}
+              onDelete={() => onDelete(trx)}
               transaksi={trx}            
             />
           ))

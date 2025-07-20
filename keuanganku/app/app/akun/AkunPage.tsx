@@ -7,7 +7,7 @@ import {
   getAllAkun,
   tambahAkun
 } from '@/actions/akun';
-import { ambilTransaksi } from '@/actions/transaksi';
+import { ambilTransaksi, deleteTransaksi, EditTransaksiParams, updateTransaksi } from '@/actions/transaksi';
 import { format } from 'date-fns';
 import AddAccountDialog from '@/components/dialog/TambahAkunDialog';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
@@ -25,6 +25,8 @@ import { TransaksiResponse } from '@/types/transaksi';
 import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
 import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
 import { tambahTransaksi, TambahTransaksiParams } from '@/actions/transaksi';
+import DialogEditTransaksi from '@/components/dialog/DialogEditTransaksi';
+import { handleApiAction } from '@/lib/api';
 
 const pengeluaranList = [
   { label: 'Makanan', value: 1500000, warna: '#F87171' },
@@ -63,6 +65,9 @@ export default function AkunPage() {
   const [size, setSize] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dialogEditTrx, setDialogEditTrx] = useState(false);
+  const [dialogHapusTrx, setDialogHapusTrx] = useState(false);
+  const [selectedTrx, setSelectedTrx] = useState<TransaksiResponse | null>(null);
 
   const akunOptions = ['semua', ...listAkun.map((a) => a.nama)];
 
@@ -143,8 +148,6 @@ export default function AkunPage() {
       setLoadingFetch(false);
     }
   };
-
-
   const handleAkunBaru = async (data: { nama: string; saldoAwal: number }) => {
     if (!data.nama.trim()) return toast.error('Nama akun tidak boleh kosong.');
     if (data.saldoAwal < 0) return toast.error('Saldo awal tidak boleh negatif.');
@@ -226,6 +229,36 @@ export default function AkunPage() {
     }
   }
 
+  const handleEditTransaksi = async (data: EditTransaksiParams) => {
+    setLoading(true);
+    console.log(data);
+    await handleApiAction({
+      action: () => updateTransaksi(data),
+      successMessage: 'Transaksi berhasil diperbarui',
+      onSuccess: () => {
+        fetchData();
+        setSelectedTrx(null);
+        setDialogEditTrx(false);
+      },
+      onFinally: () => setLoading(false),
+    });
+  };
+
+  const handleDeleteTransaksi = async (data: TransaksiResponse) => {
+    setLoading(true);
+    await handleApiAction({
+      action: () => deleteTransaksi(data),
+      successMessage: 'Transaksi berhasil dihapus',
+      onSuccess: async () => {
+        await fetchData();
+        setDialogHapusTrx(false);
+        setSelectedTrx(null);
+      },
+      onFinally: () => setLoading(false),
+    });
+  }
+
+
   useEffect(() => {
     fetchData(true);
   }, []);
@@ -265,6 +298,27 @@ export default function AkunPage() {
   return (
     <>
       {/* Modal */}
+      <DialogEditTransaksi
+        isOpen={dialogEditTrx}
+        isLoading={loading}
+        onSubmit={(data) => handleEditTransaksi(data)} // ✅ ini menerima hasil input
+        onClose={() => setDialogEditTrx(false)}
+        akunOptions={listAkun}
+        transaksiData={selectedTrx}
+      />
+
+      <ConfirmDialog
+        isOpen={dialogHapusTrx}
+        onClose={() => setDialogHapusTrx(false)}
+        title='Hapus transaksi'
+        description='Data yang dihapus tidak akan bisa dikembalikan!'
+        confirmText='Ya, hapus!'
+        onConfirm={() => {
+          if (selectedTrx) {
+            handleDeleteTransaksi(selectedTrx)
+          }
+        }}
+      />
       <ConfirmDialog
         isOpen={isOpenHapusAkun}
         onClose={() => {
@@ -328,6 +382,10 @@ export default function AkunPage() {
           />
           <section className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
             <TransaksiTerbaruSection
+              onClickTrx={(trx) => {
+                setSelectedTrx(trx);
+                setDialogEditTrx(true);
+              } }
               transaksi={transaksiTerbaru}
               filterWaktu={filterWaktu}
               filterAkun={filterAkun}
@@ -342,10 +400,12 @@ export default function AkunPage() {
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               size={size}
-              setSize={setSize}
+              setSize={setSize} 
+              onDelete={(trx) => {
+                setSelectedTrx(trx);
+                setDialogHapusTrx(true);
+              }}            
             />
-
-
             <RingkasanUangSection
               periode={periode}
               setPeriode={setPeriode}

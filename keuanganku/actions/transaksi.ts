@@ -20,6 +20,15 @@ export interface AmbilTransaksiParams {
   search?: string;
 }
 
+export type EditTransaksiParams = {
+  id: string;
+  idKategori: string;
+  idAkun: string;
+  jumlah: number;
+  tanggal: string;
+  catatan?: string;
+};
+
 export interface DataGetTransaksi {
   totalItems: number;
   totalPages: number;
@@ -61,4 +70,23 @@ export async function ambilTransaksi(params: AmbilTransaksiParams) {
   return fetcher<DataGetTransaksi | null>(url.toString(), {
     method: "GET"
   });
+}
+
+export async function updateTransaksi(params: EditTransaksiParams) {
+  const { id, ...body } = params;
+
+  return fetcher(API_ROUTES.TRANSAKSI.PUT(id), {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteTransaksi(data: TransaksiResponse) {
+  const {id} = data;
+  return fetcher(API_ROUTES.TRANSAKSI.DELETE(id), {
+    method: 'DELETE'
+  })
 }

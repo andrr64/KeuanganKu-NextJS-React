@@ -125,7 +125,7 @@ export default function ListKategori({
           </li>
         ) : (
           kategoriList.map((kategori) => (
-            <KategoriItem kategori={kategori} onPilihKategori={() => onPilihKategori(kategori)} />
+            <KategoriItem key={kategori.id} kategori={kategori} onPilihKategori={() => onPilihKategori(kategori)} />
           ))
         )}
       </ul>

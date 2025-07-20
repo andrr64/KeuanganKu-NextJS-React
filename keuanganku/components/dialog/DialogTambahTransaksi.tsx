@@ -11,7 +11,6 @@ import {
 import { Fragment, useEffect, useState } from 'react';
 import { AkunResponse } from '@/types/akun';
 import { KategoriResponse } from '@/types/kategori';
-import Loading from '../Loading';
 import toast from 'react-hot-toast';
 import { getAllKategori } from '@/actions/kategori';
 import LoadingP from '../LoadingP';
