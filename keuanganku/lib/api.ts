@@ -25,5 +25,44 @@ export const API_ROUTES = {
   TRANSAKSI: {
     TAMBAH: `${API_BASE_URL}/secure/transaksi`,
     FILTER: `${API_BASE_URL}/secure/transaksi`
+  },
+  GOAL: {
+    POST: `${API_BASE_URL}/secure/goal`,
+    GET: `${API_BASE_URL}/secure/goal/filter`,
+    PUT: (id: string) => `${API_BASE_URL}/secure/goal/${id}`,
+    PUT_STATUS: (id: string) => `${API_BASE_URL}/secure/goal/${id}/set-status`,
+    PUT_TAMBAH_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/tambah-uang`,
+    PUT_KURANGI_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/kurangi-uang`
   }
 };
+
+
+// lib/handleApiAction.ts
+import toast from 'react-hot-toast';
+
+type ApiActionOptions = {
+  action: () => Promise<any>;
+  onSuccess?: () => void;
+  onFinally?: () => void;
+  successMessage?: string;
+};
+
+export async function handleApiAction({
+  action,
+  onSuccess,
+  onFinally,
+  successMessage,
+}: ApiActionOptions) {
+  try {
+    const response = await action();
+    if (!response.success) throw new Error(response.message);
+    if (successMessage){
+      toast.success(successMessage)
+    };
+    onSuccess?.();
+  } catch (e: any) {
+    toast.error(`Error: ${e.message}`);
+  } finally {
+    onFinally?.();
+  }
+}
