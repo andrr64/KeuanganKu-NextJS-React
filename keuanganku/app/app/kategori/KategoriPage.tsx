@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import ListKategori from "./components/SectionListKategori";
-import HeaderKategori from "./components/HeaderKategori";
+import ListKategori from "./components/ListKategori";
+import HeaderKategori from "./components/Header";
 import { KategoriResponse } from "@/types/kategori";
 import DialogEditKategori from "@/components/dialog/DialogEditKategori";
 import DialogTambahKategori from "@/components/dialog/DialogTambahKategori";

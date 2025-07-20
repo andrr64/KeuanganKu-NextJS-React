@@ -3,6 +3,7 @@
 import { KategoriResponse } from '@/types/kategori'
 import LoadingP from '@/components/LoadingP'
 import { FaTimes } from 'react-icons/fa'
+import KategoriItem from '@/components/items/KategoriItem'
 
 type Props = {
   loading: boolean
@@ -51,7 +52,7 @@ export default function ListKategori({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_1fr] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_2fr_3fr] gap-3">
           {/* Filter Jenis */}
           <div>
             <label htmlFor="filterJenis" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
@@ -87,7 +88,7 @@ export default function ListKategori({
           </div>
 
           {/* Search Input */}
-          <div>
+          <div className="sm:col-span-2 md:col-span-1">
             <label htmlFor="search" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
               Cari Kategori
             </label>
@@ -113,30 +114,18 @@ export default function ListKategori({
             </div>
           </div>
         </div>
+
       </div>
 
       {/* LIST */}
-      <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto max-h-[560px]">
+      <ul className="min-h-[480px] divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto max-h-[480px]">
         {kategoriList.length === 0 ? (
           <li className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
             Tidak ada kategori.
           </li>
         ) : (
           kategoriList.map((kategori) => (
-            <li
-              key={kategori.id}
-              onClick={() => onPilihKategori(kategori)}
-              className="py-4 flex items-center justify-between px-3 rounded-md transition hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-[.98] cursor-pointer"
-            >
-              <div>
-                <p className="font-medium text-sm">{kategori.nama}</p>
-                <p
-                  className={`text-xs font-medium ${kategori.jenis === 2 ? 'text-green-500' : 'text-red-500'}`}
-                >
-                  {kategori.jenis === 1 ? 'Pengeluaran' : 'Pemasukan'}
-                </p>
-              </div>
-            </li>
+            <KategoriItem kategori={kategori} onPilihKategori={() => onPilihKategori(kategori)} />
           ))
         )}
       </ul>
