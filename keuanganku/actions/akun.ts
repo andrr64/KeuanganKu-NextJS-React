@@ -18,7 +18,6 @@ export const getAllAkun = async () => {
 export const hapusAkun = async (id: string) => {
     return fetcher(API_ROUTES.AKUN.HAPUS(id), {
         method: 'DELETE',
-        body: JSON.stringify({ idAkun: id }),
     });
 }
 

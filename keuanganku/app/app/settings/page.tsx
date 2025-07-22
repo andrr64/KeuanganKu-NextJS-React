@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ProfilPage from "./ProfilPage";
+import ProfilPage from "./PengaturanPage";
 
 export const metadata: Metadata = {
     title: 'Profil | KeuanganKu',

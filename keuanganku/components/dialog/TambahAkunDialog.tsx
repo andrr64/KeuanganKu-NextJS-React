@@ -9,7 +9,6 @@ import {
     Description,
 } from '@headlessui/react'
 import { Fragment, useState } from 'react'
-import Loading from '../Loading'
 
 export default function AddAccountDialog({
     isOpen,
@@ -32,7 +31,6 @@ export default function AddAccountDialog({
 
     return (
         <>
-            {isLoading && <Loading/>}
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={onClose}>
                     <TransitionChild

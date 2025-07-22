@@ -34,18 +34,15 @@ const MENU_LIST = [
   {
     label: 'Keuangan',
     items: [
-      { name: 'Akun', href: '/app/akun', icon: <FaBoxOpen /> },
-      { name: 'Kategori', href: '/app/kategori', icon: <FaFileAlt /> },
-      { name: 'Transaksi', href: '/app/transaksi', icon: <FaMoneyBillWave /> },
-      { name: 'Transfer', href: '/app/transfer', icon: <FaExchangeAlt /> },
+      { name: 'Akun & Transaksi', href: '/app/akun', icon: <FaBoxOpen /> },
       { name: 'Goal', href: '/app/goal', icon: <FaChartLine /> },
     ],
   },
   {
     label: 'Pengaturan',
     items: [
-      { name: 'Profil', href: '/app/settings', icon: <FaCog /> },
-      { name: 'Keamanan', href: '/app/security', icon: <FaShieldAlt /> },
+      { name: 'Data Kategori', href: '/app/kategori', icon: <FaFileAlt /> },
+      { name: 'Pengaturan', href: '/app/settings', icon: <FaCog /> },
       {
         name: 'Logout',
         icon: <FaSignOutAlt />,

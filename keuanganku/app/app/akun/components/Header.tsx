@@ -14,10 +14,9 @@ export default function Header({
   onTambahTransaksiClick
 }: HeaderProps) {
   return (
-    <header className="mb-6">
+    <header >
       <div className="flex flex-col sm:items-start sm:justify-between gap-4">
         <h1 className="text-2xl font-bold">Akun</h1>
-
         <div className="flex flex-wrap gap-3">
           {/* Tambah Transaksi */}
           <button

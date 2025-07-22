@@ -5,6 +5,8 @@ export const API_ROUTES = {
     LOGIN: `${API_BASE_URL}/auth/login`,
     REGISTER: `${API_BASE_URL}/auth/register`,
     LOGOUT: `${API_BASE_URL}/auth/logout`,
+    UPDATE: `${API_BASE_URL}/secure/pengguna`,
+    ME: `${API_BASE_URL}/secure/pengguna/detail-pengguna`
   },
   AKUN: {
     TAMBAH: `${API_BASE_URL}/secure/akun`, // POST
@@ -26,7 +28,13 @@ export const API_ROUTES = {
     TAMBAH: `${API_BASE_URL}/secure/transaksi`,
     FILTER: `${API_BASE_URL}/secure/transaksi`,
     PUT: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`,
-    DELETE: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`
+    GET_RECENT: `${API_BASE_URL}/secure/transaksi/recent`,
+    DELETE: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`,
+    GRAFIK_CASHFLOW: `${API_BASE_URL}/secure/transaksi/grafik-cashflow`,
+    RINGKASAN: `${API_BASE_URL}/secure/transaksi/ringkasan`, 
+  },
+  DASHBOARD: {
+    GET_RECENT_INFO: `${API_BASE_URL}/secure/dashboard`
   },
   GOAL: {
     POST: `${API_BASE_URL}/secure/goal`,
@@ -35,36 +43,50 @@ export const API_ROUTES = {
     PUT: (id: string) => `${API_BASE_URL}/secure/goal/${id}`,
     PUT_STATUS: (id: string) => `${API_BASE_URL}/secure/goal/${id}/set-status`,
     PUT_TAMBAH_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/tambah-uang`,
-    PUT_KURANGI_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/kurangi-uang`
-  }
+    PUT_KURANGI_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/kurangi-uang`,
+    GET_V2: `${API_BASE_URL}/secure/goal/v2`,
+  },
+    STATISTIK: {
+    KATEGORI_BULANAN: `${API_BASE_URL}/secure/transaksi/by-kategori-month`,
+  },
 };
 
 
 // lib/handleApiAction.ts
 import toast from 'react-hot-toast';
 
-type ApiActionOptions = {
-  action: () => Promise<any>;
-  onSuccess?: () => void;
+export interface ApiActionOptions<T> {
+  action: () => Promise<{ success: boolean; message?: string; data?: T }>;
+  onSuccess?: (data: T) => void;
   onFinally?: () => void;
   successMessage?: string;
-};
+}
 
-export async function handleApiAction({
+export async function handleApiAction<T>({
   action,
   onSuccess,
   onFinally,
   successMessage,
-}: ApiActionOptions) {
+}: ApiActionOptions<T>): Promise<T | null> {
   try {
     const response = await action();
+
     if (!response.success) throw new Error(response.message);
-    if (successMessage){
-      toast.success(successMessage)
-    };
-    onSuccess?.();
+
+    if (successMessage) {
+      toast.success(successMessage);
+    }
+
+    if (response.data !== undefined) {
+      onSuccess?.(response.data);
+      return response.data;
+    } else {
+      onSuccess?.(undefined as T); // fallback kalo data undefined
+      return null;
+    }
   } catch (e: any) {
     toast.error(`Error: ${e.message}`);
+    return null;
   } finally {
     onFinally?.();
   }

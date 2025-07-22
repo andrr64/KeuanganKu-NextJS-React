@@ -112,25 +112,17 @@ export default function DialogEditTransaksi({
             fetchKategori();
         }
     }, [isOpen]);
-
-    // Set kategori default saat jenisTransaksi berubah
     useEffect(() => {
+        // Hanya saat mode tambah dan kategori sudah selesai dimuat
+        if (isLoadingKategori || transaksiData) return;
+
         const listBaru = jenisTransaksi === 1 ? listKategoriPengeluaran : listKategoriPemasukan;
         if (listBaru.length > 0) {
             setKategoriId(listBaru[0].id);
         } else {
             setKategoriId("");
         }
-    }, [jenisTransaksi]);
-
-    // Set kategori default saat data kategori selesai di-fetch
-    useEffect(() => {
-        if (transaksiData) return;
-        const listBaru = jenisTransaksi === 1 ? listKategoriPengeluaran : listKategoriPemasukan;
-        if (listBaru.length > 0) {
-            setKategoriId(listBaru[0].id);
-        }
-    }, [listKategoriPengeluaran, listKategoriPemasukan]);
+    }, [isLoadingKategori, jenisTransaksi, listKategoriPengeluaran, listKategoriPemasukan, transaksiData]);
 
     const handleSekarang = () => {
         setTanggal(formatDateForInput(new Date()));

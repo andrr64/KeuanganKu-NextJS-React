@@ -5,9 +5,10 @@ import toast from 'react-hot-toast';
 import {
   editAkun,
   getAllAkun,
+  hapusAkun,
   tambahAkun
 } from '@/actions/akun';
-import { ambilTransaksi, deleteTransaksi, EditTransaksiParams, updateTransaksi } from '@/actions/transaksi';
+import { ambilTransaksi, deleteTransaksi, EditTransaksiParams, getRingkasan, RingkasanKategoriItem, RingkasanKategoriResponse, updateTransaksi } from '@/actions/transaksi';
 import { format } from 'date-fns';
 import AddAccountDialog from '@/components/dialog/TambahAkunDialog';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
@@ -27,17 +28,10 @@ import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
 import { tambahTransaksi, TambahTransaksiParams } from '@/actions/transaksi';
 import DialogEditTransaksi from '@/components/dialog/DialogEditTransaksi';
 import { handleApiAction } from '@/lib/api';
+import { getColors } from '@/lib/utils';
 
-const pengeluaranList = [
-  { label: 'Makanan', value: 1500000, warna: '#F87171' },
-  { label: 'Transportasi', value: 500000, warna: '#FB923C' },
-  { label: 'Hiburan', value: 300000, warna: '#FACC15' },
-  { label: 'Lainnya', value: 200000, warna: '#34D399' },
-];
+type RingkasanKategoriItemWithColor = RingkasanKategoriItem & { warna: string };
 
-const pemasukanList = [
-  { label: 'Gaji', value: 7500000, warna: '#60A5FA' },
-];
 
 export default function AkunPage() {
   const [listAkun, setListAkun] = useState<AkunResponse[]>([]);
@@ -52,14 +46,14 @@ export default function AkunPage() {
   const [idAkunHapus, setIdAkunHapus] = useState<string | null>(null);
   const [isOpenTambahTransaksi, setIsOpenTambahTransaksi] = useState(false);
 
-  const [periode, setPeriode] = useState('bulanan');
+  const [periode, setPeriode] = useState<number>(1);
   const [filterWaktu, setFilterWaktu] = useState('semua');
   const [filterAkun, setFilterAkun] = useState('semua');
   const [jenisTransaksi, setJenisTransaksi] = useState(0); // 0 = semua, 1 = keluar, 2 = masuk
   const [akunYangDiedit, setAkunYangDiedit] = useState<AkunResponse | null>(null);
 
-  const [listPengeluaran, setListPengeluaran] = useState<TransaksiResponse[]>([]);
-  const [listPemasukan, setListPemasukan] = useState<TransaksiResponse[]>([]);
+  const [ringkasanListPengeluaran, setRingkasanListPengeluaran] = useState<RingkasanKategoriItemWithColor[]>([]);
+  const [ringkasanListPemasukan, setRingkasanListPemasukan] = useState<RingkasanKategoriItemWithColor[]>([]);
   const [transaksiTerbaru, setTransaksiTerbaru] = useState<TransaksiResponse[]>([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(5);
@@ -81,6 +75,32 @@ export default function AkunPage() {
       setErrorMessage(response.message || 'Gagal memuat data akun.');
     }
   };
+
+
+  const fetchRingkasan = async () => {
+    setLoading(true);
+    await handleApiAction<RingkasanKategoriResponse>({
+      action: () => getRingkasan(periode),
+      onSuccess: (data) => {
+        const warnaPengeluaran = getColors(data.pengeluaran.length);
+        const warnaPemasukan = getColors(data.pemasukan.length);
+        setRingkasanListPengeluaran(
+          data.pengeluaran.map((e, i) => ({
+            ...e,
+            warna: warnaPengeluaran[i],
+          }))
+        );
+        setRingkasanListPemasukan(
+          data.pemasukan.map((e, i) => ({
+            ...e,
+            warna: warnaPemasukan[i],
+          }))
+        );
+      },
+      onFinally: () => setLoading(false),
+    });
+  };
+
 
   const fetchTransaksi = async () => {
     const now = new Date();
@@ -123,12 +143,7 @@ export default function AkunPage() {
       const result = res.data!;
       const semuaTransaksi: TransaksiResponse[] = result.content;
 
-      const pengeluaran = semuaTransaksi.filter((t) => t.jenisTransaksi === 1);
-      const pemasukan = semuaTransaksi.filter((t) => t.jenisTransaksi === 2);
-
       setTransaksiTerbaru(semuaTransaksi);
-      setListPengeluaran(pengeluaran);
-      setListPemasukan(pemasukan);
       setTotalPages(result.totalPages);
     } catch (err: any) {
       console.error(err);
@@ -142,12 +157,14 @@ export default function AkunPage() {
       await new Promise((res) => setTimeout(res, 500));
       await fetchAkun();
       await fetchTransaksi();
+      await fetchRingkasan();
     } catch (error: any) {
       setErrorMessage(error?.message || 'Terjadi kesalahan saat mengambil data.');
     } finally {
       setLoadingFetch(false);
     }
   };
+
   const handleAkunBaru = async (data: { nama: string; saldoAwal: number }) => {
     if (!data.nama.trim()) return toast.error('Nama akun tidak boleh kosong.');
     if (data.saldoAwal < 0) return toast.error('Saldo awal tidak boleh negatif.');
@@ -196,18 +213,16 @@ export default function AkunPage() {
 
   const handleHapusAkun = async (id: string) => {
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 1000));
-
-    try {
-      setIsOpenHapusAkun(false);
-      setIdAkunHapus(null);
-      toast.success('Akun berhasil dihapus.');
-      fetchData();
-    } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    handleApiAction({
+      action: () => hapusAkun(id),
+      successMessage: 'Akun berhasil dihapus',
+      onSuccess: async () => {
+        await fetchData();
+        setIsOpenHapusAkun(false);
+        setIdAkunHapus(null);
+      },
+      onFinally: () => setLoading(false)
+    })
   };
 
   const handleTambahTransaksi = async (data: TambahTransaksiParams) => {
@@ -260,6 +275,10 @@ export default function AkunPage() {
 
 
   useEffect(() => {
+    fetchRingkasan();
+  }, [periode])
+
+  useEffect(() => {
     fetchData(true);
   }, []);
 
@@ -283,10 +302,9 @@ export default function AkunPage() {
   if (isAkunEmpty) {
     return (
       <>
-
         <AddAccountDialog
           isOpen={isOpenTambahAkun}
-          isLoading={loading}
+          isLoading={false}
           onClose={() => setIsOpenTambahAkun(false)}
           onSubmit={handleAkunBaru}
         />
@@ -300,7 +318,7 @@ export default function AkunPage() {
       {/* Modal */}
       <DialogEditTransaksi
         isOpen={dialogEditTrx}
-        isLoading={loading}
+        isLoading={false}
         onSubmit={(data) => handleEditTransaksi(data)} // ✅ ini menerima hasil input
         onClose={() => setDialogEditTrx(false)}
         akunOptions={listAkun}
@@ -332,7 +350,7 @@ export default function AkunPage() {
       />
       <DialogTambahTransaksi
         isOpen={isOpenTambahTransaksi}
-        isLoading={loading}
+        isLoading={false}
         onClose={() => setIsOpenTambahTransaksi(false)}
         onSubmit={(data) => {
           handleTambahTransaksi(data);
@@ -341,7 +359,7 @@ export default function AkunPage() {
       />
       <EditAccountDialog
         isOpen={isOpenEditNamaAkun}
-        isLoading={loading}
+        isLoading={false}
         akun={akunYangDiedit}
         onClose={() => {
           setAkunYangDiedit(null);
@@ -353,14 +371,14 @@ export default function AkunPage() {
 
       <AddAccountDialog
         isOpen={isOpenTambahAkun}
-        isLoading={loading}
+        isLoading={false}
         onClose={() => setIsOpenTambahAkun(false)}
         onSubmit={handleAkunBaru}
       />
 
       {/* Halaman */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
-        <div className='max-w-[1280px] mx-auto md:mx-0'>
+        <div className='max-w-[1280px] flex flex-col gap-8 mx-auto md:mx-0'>
           <Header
             fetchData={() => fetchData(false)}
             onTambahTransaksiClick={() => {
@@ -380,12 +398,12 @@ export default function AkunPage() {
               setIsOpenHapusAkun(true);
             }}
           />
-          <section className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TransaksiTerbaruSection
               onClickTrx={(trx) => {
                 setSelectedTrx(trx);
                 setDialogEditTrx(true);
-              } }
+              }}
               transaksi={transaksiTerbaru}
               filterWaktu={filterWaktu}
               filterAkun={filterAkun}
@@ -400,17 +418,17 @@ export default function AkunPage() {
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               size={size}
-              setSize={setSize} 
+              setSize={setSize}
               onDelete={(trx) => {
                 setSelectedTrx(trx);
                 setDialogHapusTrx(true);
-              }}            
+              }}
             />
             <RingkasanUangSection
               periode={periode}
-              setPeriode={setPeriode}
-              pengeluaranList={pengeluaranList}
-              pemasukanList={pemasukanList}
+              setPeriode={(e) => {setPeriode(e)}}
+              pengeluaranList={ringkasanListPengeluaran}
+              pemasukanList={ringkasanListPemasukan}
             />
           </section>
         </div>

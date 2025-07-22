@@ -10,6 +10,11 @@ export interface TambahTransaksiParams {
   catatan?: string;
 }
 
+export type RingkasanKategoriResponse = {
+  pengeluaran: RingkasanKategoriItem[];
+  pemasukan: RingkasanKategoriItem[];
+}
+
 export interface AmbilTransaksiParams {
   startDate?: string;
   endDate?: string;
@@ -85,8 +90,49 @@ export async function updateTransaksi(params: EditTransaksiParams) {
 }
 
 export async function deleteTransaksi(data: TransaksiResponse) {
-  const {id} = data;
+  const { id } = data;
   return fetcher(API_ROUTES.TRANSAKSI.DELETE(id), {
     method: 'DELETE'
   })
+}
+
+export async function ambilRecentTransaksi() {
+  return fetcher<TransaksiResponse[]>(
+    API_ROUTES.TRANSAKSI.GET_RECENT, {
+    method: 'GET'
+  }
+  )
+}
+
+export interface RingkasanKategoriItem {
+  label: string;
+  value: number;
+}
+
+
+export async function getRingkasan(periode: number) {
+  const url = `${API_ROUTES.TRANSAKSI.RINGKASAN}?periode=${periode}`;
+  return fetcher<RingkasanKategoriResponse>(url, { method: 'GET' });
+}
+
+export interface CashflowDataPoint {
+  tanggal: string;
+  pemasukan: number;
+  pengeluaran: number;
+}
+
+export async function getCashflowGraph(periode: number) {
+  const url = `${API_ROUTES.TRANSAKSI.GRAFIK_CASHFLOW}?periode=${periode}`;
+  return fetcher<CashflowDataPoint[]>(url, { method: "GET" });
+}
+
+export interface KategoriStatistik {
+  namaKategori: string;
+  totalPengeluaran: number;
+}
+
+export async function getKategoriPengeluaranStatistik() {
+  return fetcher<KategoriStatistik[]>(API_ROUTES.STATISTIK.KATEGORI_BULANAN, {
+    method: 'GET',
+  });
 }

@@ -2,6 +2,7 @@
 
 import TransaksiItem from '@/components/items/TransaksiItem';
 import { TransaksiResponse } from '@/types/transaksi';
+import { FaReceipt } from 'react-icons/fa'; // ✅ React icon
 import { useEffect, useState } from 'react';
 
 interface Props {
@@ -43,66 +44,68 @@ export default function TransaksiTerbaruSection({
   onClickTrx,
   onDelete
 }: Props) {
-
   return (
-    <div className="max-h-[1080px] bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors w-full flex flex-col">
-      <div className="flex flex-col gap-2 mb-4">
-        <div>
-          <h2 className="text-md font-semibold">Transaksi Terbaru</h2>
+    <div className="space-y-4">
+      {/* Judul Seksi */}
+      <h2 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-white flex items-center gap-2">
+        <FaReceipt className="text-indigo-600" />
+        Transaksi Terbaru
+      </h2>
+
+      {/* Card Content */}
+      <div className="max-h-[1080px] bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-colors w-full flex flex-col">
+        {/* Filter Section */}
+        <div className="flex flex-col gap-2 mb-4">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Filter berdasarkan waktu, akun, jenis & pencarian
           </p>
-        </div>
 
-        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="filterWaktu" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
-              Waktu
-            </label>
-            <select
-              id="filterWaktu"
-              value={filterWaktu}
-              onChange={(e) => setFilterWaktu(e.target.value)}
-              className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
-            >
-              <option value="semua">Semua Waktu</option>
-              <option value="hari">Hari Ini</option>
-              <option value="minggu">7 Hari Terakhir</option>
-              <option value="bulan">Bulan Ini</option>
-              <option value="tahun">Tahun Ini</option>
-            </select>
-          </div>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Filter Waktu */}
+            <div>
+              <label htmlFor="filterWaktu" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
+                Waktu
+              </label>
+              <select
+                id="filterWaktu"
+                value={filterWaktu}
+                onChange={(e) => setFilterWaktu(e.target.value)}
+                className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
+              >
+                <option value="semua">Semua Waktu</option>
+                <option value="hari">Hari Ini</option>
+                <option value="minggu">7 Hari Terakhir</option>
+                <option value="bulan">Bulan Ini</option>
+                <option value="tahun">Tahun Ini</option>
+              </select>
+            </div>
 
-          <div>
-            <label htmlFor="filterAkun" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
-              Akun
-            </label>
-            <select
-              id="filterAkun"
-              value={filterAkun}
-              onChange={(e) => setFilterAkun(e.target.value)}
-              className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
-            >
-              {akunOptions.map((a, idx) => (
-                <option key={idx} value={a}>
-                  {a === 'semua' ? 'Semua Akun' : a}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Filter Akun */}
+            <div>
+              <label htmlFor="filterAkun" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
+                Akun
+              </label>
+              <select
+                id="filterAkun"
+                value={filterAkun}
+                onChange={(e) => setFilterAkun(e.target.value)}
+                className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
+              >
+                {akunOptions.map((a, idx) => (
+                  <option key={idx} value={a}>
+                    {a === 'semua' ? 'Semua Akun' : a}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="sm:col-span-2">
-            <div className="grid grid-cols-2 gap-2">
-              {/* Jenis Transaksi */}
+            {/* Jenis dan Jumlah Data */}
+            <div className="sm:col-span-2 grid grid-cols-2 gap-2">
               <div>
-                <label
-                  htmlFor="jenisTransaksi"
-                  className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block"
-                >
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
                   Jenis Transaksi
                 </label>
                 <select
-                  id="jenisTransaksi"
                   value={jenisTransaksi}
                   onChange={(e) => setJenisTransaksi(parseInt(e.target.value))}
                   className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
@@ -113,16 +116,11 @@ export default function TransaksiTerbaruSection({
                 </select>
               </div>
 
-              {/* Jumlah Data per Page */}
               <div>
-                <label
-                  htmlFor="jumlahData"
-                  className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block"
-                >
+                <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
                   Jumlah Data
                 </label>
                 <select
-                  id="jumlahData"
                   value={size}
                   onChange={(e) => setSize(parseInt(e.target.value))}
                   className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600"
@@ -135,74 +133,73 @@ export default function TransaksiTerbaruSection({
                 </select>
               </div>
             </div>
-          </div>
 
-          <div className="sm:col-span-2">
-            <label htmlFor="search" className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
-              Cari Transaksi
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                id="search"
-                placeholder="Cari transaksi..."
-                value={searchQuery ?? ''}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 pr-10 rounded-md border border-gray-300 dark:border-gray-600"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 dark:hover:text-white"
-                  aria-label="Clear search"
-                >
-                  ×
-                </button>
-              )}
+            {/* Search */}
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 block">
+                Cari Transaksi
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cari transaksi..."
+                  value={searchQuery ?? ''}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1.5 pr-10 rounded-md border border-gray-300 dark:border-gray-600"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                    aria-label="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-
         </div>
-      </div>
 
-      <ul className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
-        {transaksi.length === 0 ? (
-          <li className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
-            Tidak ada transaksi.
-          </li>
-        ) : (
-          transaksi.map((trx) => (
-            <TransaksiItem 
-              key={trx.id}
-              onClickTrx={() => {
-                onClickTrx(trx);
-              }}
-              onDelete={() => onDelete(trx)}
-              transaksi={trx}            
-            />
-          ))
-        )}
-      </ul>
+        {/* List Transaksi */}
+        <ul className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
+          {transaksi.length === 0 ? (
+            <li className="text-sm text-gray-500 dark:text-gray-400 py-6 text-center">
+              Tidak ada transaksi.
+            </li>
+          ) : (
+            transaksi.map((trx) => (
+              <TransaksiItem
+                key={trx.id}
+                transaksi={trx}
+                onClickTrx={() => onClickTrx(trx)}
+                onDelete={() => onDelete(trx)}
+              />
+            ))
+          )}
+        </ul>
 
-      <div className="mt-4 flex justify-end items-center gap-2 text-sm">
-        <button
-          onClick={() => page > 0 && setPage(page - 1)}
-          disabled={page === 0}
-          className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-        >
-          ← Prev
-        </button>
-        <span>
-          Halaman {page + 1} dari {totalPages}
-        </span>
-        <button
-          onClick={() => page < totalPages - 1 && setPage(page + 1)}
-          disabled={page >= totalPages - 1}
-          className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-        >
-          Next →
-        </button>
+        {/* Pagination */}
+        <div className="mt-4 flex justify-end items-center gap-2 text-sm">
+          <button
+            onClick={() => page > 0 && setPage(page - 1)}
+            disabled={page === 0}
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+          >
+            ← Prev
+          </button>
+          <span>
+            Halaman {page + 1} dari {totalPages}
+          </span>
+          <button
+            onClick={() => page < totalPages - 1 && setPage(page + 1)}
+            disabled={page >= totalPages - 1}
+            className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
+          >
+            Next →
+          </button>
+        </div>
       </div>
     </div>
   );

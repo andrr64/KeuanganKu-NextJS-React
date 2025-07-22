@@ -77,6 +77,13 @@ export default function DialogTambahTransaksi({
         }
     }, [isOpen, jenisTransaksi]);
 
+    useEffect(() => {
+        if (akunOptions.length > 0 && !akunId) {
+            setAkunId(akunOptions[0].id);
+        }
+    }, [akunOptions, akunId]);
+
+
     // Update kategoriId ketika jenis transaksi berubah
     useEffect(() => {
         if (jenisTransaksi === 1 && listKategoriPengeluaran.length > 0) {

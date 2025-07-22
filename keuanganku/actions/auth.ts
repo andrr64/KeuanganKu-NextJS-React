@@ -20,3 +20,22 @@ export async function logout() {
     method: 'POST'
   });
 }
+
+export async function updateAkun(data: {
+  nama: string
+  email: string
+  passwordKonfirmasi: string
+  passwordBaru?: string
+}) {
+  return fetcher(API_ROUTES.AUTH.UPDATE, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getInfo(){
+  return fetcher<{nama: string; email: string}>(
+    API_ROUTES.AUTH.ME,{
+      method: 'GET'
+    });
+}

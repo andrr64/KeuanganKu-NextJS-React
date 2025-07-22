@@ -31,8 +31,8 @@ export async function getFilteredGoal(params: GetGoalParams) {
     url.searchParams.set("page", String(params.page));
     url.searchParams.set("size", String(params.size));
     if (params.keyword) url.searchParams.set("keyword", String(params.keyword));
-    if (params.tercapai) url.searchParams.set("tercapai", String(params.tercapai));
-
+    if (params.tercapai !== undefined) url.searchParams.set("tercapai", String(params.tercapai));
+    console.log(url.toString())
     return fetcher<GetGoalResponse>(url.toString(), {
         method: 'GET'
     });
@@ -62,22 +62,22 @@ export async function updateStatus(data: { id: string; status: boolean }) {
     });
 }
 
-export async function tambahUangGoal(params: {id: string, uang: number}){
+export async function tambahUangGoal(params: { id: string, uang: number }) {
     return fetcher(API_ROUTES.GOAL.PUT_TAMBAH_UANG(params.id), {
         method: 'PUT',
-        body: JSON.stringify({uang: params.uang})
+        body: JSON.stringify({ uang: params.uang })
     })
 }
 
 
-export async function kurangiUangGoal(params: {id: string, uang: number}){
+export async function kurangiUangGoal(params: { id: string, uang: number }) {
     return fetcher(API_ROUTES.GOAL.PUT_KURANGI_UANG(params.id), {
         method: 'PUT',
-        body: JSON.stringify({uang: params.uang})
+        body: JSON.stringify({ uang: params.uang })
     })
 }
 
-export async function hapusGoal(id: string){
+export async function hapusGoal(id: string) {
     return fetcher(API_ROUTES.GOAL.HAPUS(id), {
         method: 'DELETE'
     })
