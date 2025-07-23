@@ -12,7 +12,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { AkunResponse } from '@/types/akun';
 import { KategoriResponse } from '@/types/kategori';
 import toast from 'react-hot-toast';
-import { getAllKategori } from '@/actions/kategori';
+import { getAllKategori, getFilteredKategori } from '@/actions/kategori';
 import LoadingP from '../LoadingP';
 import { TambahTransaksiParams } from '@/actions/transaksi';
 import { formatTanggalMMDDYYYY } from '@/lib/utils';
@@ -47,9 +47,9 @@ export default function DialogTambahTransaksi({
         const fetchKategori = async () => {
             setIsLoadingKategori(true);
             try {
-                const response = await getAllKategori();
+                const response = await getFilteredKategori();
                 if (response.success && response.data) {
-                    const semuaKategori: KategoriResponse[] = response.data;
+                    const semuaKategori: KategoriResponse[] = response.data.content;
                     const pengeluaran = semuaKategori.filter(k => k.jenis == 1);
                     const pemasukan = semuaKategori.filter(k => k.jenis == 2);
                     console.log(response.data);
@@ -204,25 +204,19 @@ export default function DialogTambahTransaksi({
                                     {/* Kategori */}
                                     <div>
                                         <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Kategori</label>
-                                        {isLoadingKategori ? (
-                                            <div className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700">
-                                                <LoadingP />
-                                            </div>
-                                        ) : (
-                                            <select
-                                                value={kategoriId}
-                                                onChange={e => setKategoriId(e.target.value)}
-                                                className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                required
-                                            >
-                                                {currentKategoriList.map(k => (
-                                                    <option key={k.id} value={k.id}>{k.nama}</option>
-                                                ))}
-                                                {currentKategoriList.length === 0 && (
-                                                    <option value="" disabled>Tidak ada kategori tersedia</option>
-                                                )}
-                                            </select>
-                                        )}
+                                        <select
+                                            value={kategoriId}
+                                            onChange={e => setKategoriId(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required
+                                        >
+                                            {currentKategoriList.map(k => (
+                                                <option key={k.id} value={k.id}>{k.nama}</option>
+                                            ))}
+                                            {currentKategoriList.length === 0 && (
+                                                <option value="" disabled>Tidak ada kategori tersedia</option>
+                                            )}
+                                        </select>
                                     </div>
 
                                     {/* Jumlah */}

@@ -6,11 +6,11 @@ export const API_ROUTES = {
     REGISTER: `${API_BASE_URL}/auth/register`,
     LOGOUT: `${API_BASE_URL}/auth/logout`,
     UPDATE: `${API_BASE_URL}/secure/pengguna`,
-    ME: `${API_BASE_URL}/secure/pengguna/detail-pengguna`
+    ME: `${API_BASE_URL}/secure/pengguna/me`
   },
   AKUN: {
-    TAMBAH: `${API_BASE_URL}/secure/akun`, // POST
-    GET_SEMUA: `${API_BASE_URL}/secure/akun`, // GET
+    POST: `${API_BASE_URL}/secure/akun`, // POST
+    GET: `${API_BASE_URL}/secure/akun`, // GET
     UPDATE_NAMA: (idAkun: string) => `${API_BASE_URL}/secure/akun/update-nama/${idAkun}`, // PUT
     HAPUS: (idAkun: string) => `${API_BASE_URL}/secure/akun/${idAkun}`, // DELETE
   },
@@ -19,7 +19,7 @@ export const API_ROUTES = {
     GET_PENGELUARAN: `${API_BASE_URL}/secure/kategori/1`,
     GET_PEMASUKAN: `${API_BASE_URL}/secure/kategori/2`,
     GET_ALLL: `${API_BASE_URL}/secure/kategori`,
-    FILTER: `${API_BASE_URL}/secure/kategori/filter`,
+    GET: `${API_BASE_URL}/secure/kategori`,
     POST: `${API_BASE_URL}/secure/kategori`,
     UPDATE: (idKategori: string) => `${API_BASE_URL}/secure/kategori/${idKategori}`
   },
@@ -28,11 +28,17 @@ export const API_ROUTES = {
     TAMBAH: `${API_BASE_URL}/secure/transaksi`,
     FILTER: `${API_BASE_URL}/secure/transaksi`,
     PUT: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`,
-    GET_RECENT: `${API_BASE_URL}/secure/transaksi/recent`,
+    GET_DATA_TERBARU: `${API_BASE_URL}/secure/transaksi/data-terbaru`,
     DELETE: (id: string) => `${API_BASE_URL}/secure/transaksi/${id}`,
     GRAFIK_CASHFLOW: `${API_BASE_URL}/secure/transaksi/grafik-cashflow`,
-    RINGKASAN: `${API_BASE_URL}/secure/transaksi/ringkasan`, 
   },
+
+  STATISTIK: {
+    GET_TRANSAKSI_TIAP_KATEGORI: `${API_BASE_URL}/secure/statistik/data-transaksi-terhadap-kategori`,
+    GET_RINGKASAN_BULAN_INI: `${API_BASE_URL}/secure/statistik/data-ringkasan-bulan-ini`,
+    GET_CASHFLOW_THD_WAKTU: `${API_BASE_URL}/secure/statistik/data-cashflow-terhadap-waktu`,
+  },
+
   DASHBOARD: {
     GET_RECENT_INFO: `${API_BASE_URL}/secure/dashboard`
   },
@@ -45,9 +51,6 @@ export const API_ROUTES = {
     PUT_TAMBAH_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/tambah-uang`,
     PUT_KURANGI_UANG: (id: string) => `${API_BASE_URL}/secure/goal/${id}/kurangi-uang`,
     GET_V2: `${API_BASE_URL}/secure/goal/v2`,
-  },
-    STATISTIK: {
-    KATEGORI_BULANAN: `${API_BASE_URL}/secure/transaksi/by-kategori-month`,
   },
 };
 

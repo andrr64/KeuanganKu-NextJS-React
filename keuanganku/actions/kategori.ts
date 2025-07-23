@@ -52,7 +52,7 @@ export async function getAllKategori() {
     )
 }
 
-export async function updateKategori(params: UpdateKategoriParams){
+export async function updateKategori(params: UpdateKategoriParams) {
     return fetcher(API_ROUTES.KATEGORI.UPDATE(params.idKategori), {
         method: 'PUT',
         body: JSON.stringify({
@@ -61,20 +61,22 @@ export async function updateKategori(params: UpdateKategoriParams){
     });
 }
 
-export async function getFilteredKategori(params: GetFilteredKategoriParams) {
-    const url = new URL(API_ROUTES.KATEGORI.FILTER)
+export async function getFilteredKategori(params?: GetFilteredKategoriParams) {
+    const url = new URL(API_ROUTES.KATEGORI.GET)
+    if (params) {
 
-    if (params.page !== undefined) url.searchParams.set("page", String(params.page))
-    if (params.size !== undefined) url.searchParams.set("size", String(params.size))
-    if (params.jenis !== undefined) url.searchParams.set("jenis", String(params.jenis))
-    if (params.keyword) url.searchParams.set("keyword", params.keyword)
+        if (params.page !== undefined) url.searchParams.set("page", String(params.page))
+        if (params.size !== undefined) url.searchParams.set("size", String(params.size))
+        if (params.jenis !== undefined) url.searchParams.set("jenis", String(params.jenis))
+        if (params.keyword) url.searchParams.set("keyword", params.keyword)
 
+    }
     return fetcher<KategoriPaginatedResponse>(url.toString(), {
         method: "GET"
     })
 }
 
-export async function postKategori(params: AddKategoriParams){
+export async function postKategori(params: AddKategoriParams) {
     return fetcher(API_ROUTES.KATEGORI.POST, {
         method: "POST",
         body: JSON.stringify(params)

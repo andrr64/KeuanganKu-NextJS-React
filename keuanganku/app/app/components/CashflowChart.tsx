@@ -89,7 +89,7 @@ export default function CashflowChartSection() {
                                 dataKey="pemasukan"
                                 stroke="#22c55e"
                                 strokeWidth={2}
-                                dot={{ r: 3 }}
+                                dot={false}
                                 activeDot={{ r: 4 }}
                             />
                             <Line
@@ -97,7 +97,7 @@ export default function CashflowChartSection() {
                                 dataKey="pengeluaran"
                                 stroke="#ef4444"
                                 strokeWidth={2}
-                                dot={{ r: 3 }}
+                                dot={false}
                                 activeDot={{ r: 4 }}
                             />
                         </LineChart>

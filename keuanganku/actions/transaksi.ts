@@ -98,7 +98,7 @@ export async function deleteTransaksi(data: TransaksiResponse) {
 
 export async function ambilRecentTransaksi() {
   return fetcher<TransaksiResponse[]>(
-    API_ROUTES.TRANSAKSI.GET_RECENT, {
+    API_ROUTES.TRANSAKSI.GET_DATA_TERBARU, {
     method: 'GET'
   }
   )
@@ -111,7 +111,7 @@ export interface RingkasanKategoriItem {
 
 
 export async function getRingkasan(periode: number) {
-  const url = `${API_ROUTES.TRANSAKSI.RINGKASAN}?periode=${periode}`;
+  const url = `${API_ROUTES.STATISTIK.GET_TRANSAKSI_TIAP_KATEGORI}?periode=${periode}`;
   return fetcher<RingkasanKategoriResponse>(url, { method: 'GET' });
 }
 
@@ -122,7 +122,7 @@ export interface CashflowDataPoint {
 }
 
 export async function getCashflowGraph(periode: number) {
-  const url = `${API_ROUTES.TRANSAKSI.GRAFIK_CASHFLOW}?periode=${periode}`;
+  const url = `${API_ROUTES.STATISTIK.GET_CASHFLOW_THD_WAKTU}?periode=${periode}`;
   return fetcher<CashflowDataPoint[]>(url, { method: "GET" });
 }
 
@@ -132,7 +132,7 @@ export interface KategoriStatistik {
 }
 
 export async function getKategoriPengeluaranStatistik() {
-  return fetcher<KategoriStatistik[]>(API_ROUTES.STATISTIK.KATEGORI_BULANAN, {
-    method: 'GET',
-  });
+  // return fetcher<KategoriStatistik[]>(API_ROUTES.STATISTIK.KATEGORI_BULANAN, {
+  //   method: 'GET',
+  // });
 }

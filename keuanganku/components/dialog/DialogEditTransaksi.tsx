@@ -13,7 +13,7 @@ import { AkunResponse } from '@/types/akun';
 import { KategoriResponse } from '@/types/kategori';
 import { TransaksiResponse } from '@/types/transaksi';
 import toast from 'react-hot-toast';
-import { getAllKategori } from '@/actions/kategori';
+import { getFilteredKategori } from '@/actions/kategori';
 import LoadingP from '../LoadingP';
 import { EditTransaksiParams } from '@/actions/transaksi';
 
@@ -93,9 +93,9 @@ export default function DialogEditTransaksi({
         const fetchKategori = async () => {
             setIsLoadingKategori(true);
             try {
-                const response = await getAllKategori();
+                const response = await getFilteredKategori();
                 if (response.success && response.data) {
-                    const semuaKategori: KategoriResponse[] = response.data;
+                    const semuaKategori: KategoriResponse[] = response.data.content;
                     setKategoriPengeluaran(semuaKategori.filter(k => k.jenis === 1));
                     setKategoriPemasukan(semuaKategori.filter(k => k.jenis === 2));
                 } else {

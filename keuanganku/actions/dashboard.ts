@@ -1,7 +1,7 @@
 import { API_ROUTES } from "@/lib/api";
 import { fetcher } from "@/lib/fetcher";
 
-export type DashboardRingkasanStatistikResponse = {
+export type RingkasanBulanIniResponse = {
     totalSaldo: number;
     totalPemasukanBulanIni: number;
     totalPengeluaranBulanIni: number;
@@ -9,7 +9,7 @@ export type DashboardRingkasanStatistikResponse = {
 }
 
 export const getRecentDashboard = async () => {
-    return fetcher<DashboardRingkasanStatistikResponse>(API_ROUTES.DASHBOARD.GET_RECENT_INFO, {
+    return fetcher<RingkasanBulanIniResponse>(API_ROUTES.STATISTIK.GET_RINGKASAN_BULAN_INI, {
         method: 'GET',
     });
 }

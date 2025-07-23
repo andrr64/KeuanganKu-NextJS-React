@@ -3,14 +3,14 @@ import { fetcher } from "@/lib/fetcher";
 import { AkunResponse } from "@/types/akun";
 
 export const tambahAkun = async (nama: string, saldoAwal: number) => {
-    return fetcher(API_ROUTES.AKUN.TAMBAH, {
+    return fetcher(API_ROUTES.AKUN.POST, {
         method: 'POST',
         body: JSON.stringify({ namaAkun: nama, saldoAwal }),
     });
 }
 
 export const getAllAkun = async () => {
-    return fetcher<AkunResponse[]>(API_ROUTES.AKUN.GET_SEMUA, {
+    return fetcher<AkunResponse[]>(API_ROUTES.AKUN.GET, {
         method: 'GET',
     });
 }

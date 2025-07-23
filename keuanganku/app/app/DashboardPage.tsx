@@ -13,7 +13,7 @@ import {
   updateTransaksi
 } from '@/actions/transaksi';
 import {
-  DashboardRingkasanStatistikResponse,
+  RingkasanBulanIniResponse,
   getRecentDashboard
 } from '@/actions/dashboard';
 import {
@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
   const [listAkun, setListAkun] = useState<AkunResponse[]>([]);
   const [recentTransaksi, setRecentTransaksi] = useState<TransaksiResponse[]>([]);
-  const [statistikRingkas, setStatistikRingkas] = useState<DashboardRingkasanStatistikResponse | null>(null);
+  const [statistikRingkas, setStatistikRingkas] = useState<RingkasanBulanIniResponse | null>(null);
   const [recentGoal, setGoalList] = useState<GoalResponse[]>([]);
 
   const [isOpenTambahGoal, setIsOpenTambahGoal] = useState(false);
@@ -90,27 +90,27 @@ export default function DashboardPage() {
     });
   };
 
-  const fetchStatistikRingkasna = () => {
-    handleApiAction<DashboardRingkasanStatistikResponse>({
+  const fetchDataRingkasanBulanIni = () => {
+    handleApiAction<RingkasanBulanIniResponse>({
       action: getRecentDashboard,
       onSuccess: setStatistikRingkas,
     });
   };
 
   const fetchStatistikKategoriPengeluaran = async () => {
-    setLoading(true);
-    handleApiAction({
-      action: () => getKategoriPengeluaranStatistik(),
-      onSuccess: setDataStatistik,
-      onFinally: () => setLoading(false),
-    });
+    // setLoading(true);
+    // handleApiAction({
+    //   action: () => getKategoriPengeluaranStatistik(),
+    //   onSuccess: setDataStatistik,
+    //   onFinally: () => setLoading(false),
+    // });
   };
 
   const fetchData = () => {
     fetchAkun();
     fetchGoal();
     fetchRecentTransaksi();
-    fetchStatistikRingkasna();
+    fetchDataRingkasanBulanIni();
     fetchStatistikKategoriPengeluaran();
   };
 
