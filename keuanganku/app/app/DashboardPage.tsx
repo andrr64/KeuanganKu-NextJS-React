@@ -39,10 +39,10 @@ import DialogTambahGoal from '@/components/dialog/DialogTambahGoal';
 import DialogTambahKategori from '@/components/dialog/DialogTambahKategori';
 import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
-import AddAccountDialog from '@/components/dialog/TambahAkunDialog';
+import AddAccountDialog from '@/components/dialog/DialogTambahAkun';
 import RingkasanGoalSection from './components/RingkasanGoal';
 import KategoriStatistikSection from './components/KategoriStatistikSection';
-import EditAccountDialog from '@/components/dialog/EditNamaAkunDialog';
+import EditAccountDialog from '@/components/dialog/DialogEditAkun';
 
 export default function DashboardPage() {
   const [selectedTrx, setSelectedTrx] = useState<TransaksiResponse | null>(null);

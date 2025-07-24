@@ -71,7 +71,6 @@ export default function DialogTambahTransaksi({
                 setIsLoadingKategori(false);
             }
         };
-
         if (isOpen) {
             fetchKategori();
         }
@@ -83,7 +82,18 @@ export default function DialogTambahTransaksi({
         }
     }, [akunOptions, akunId]);
 
-
+    useEffect(() => {
+        if (isOpen) {
+            // Reset semua field ke nilai default saat dialog dibuka
+            setKategoriId('');
+            setAkunId(akunOptions[0]?.id || '');
+            setJumlah(0);
+            setTanggal(new Date().toISOString().slice(0, 16));
+            setCatatan('');
+            setJenisTransaksi(1);
+        }
+    }, [isOpen]);
+`qx`
     // Update kategoriId ketika jenis transaksi berubah
     useEffect(() => {
         if (jenisTransaksi === 1 && listKategoriPengeluaran.length > 0) {

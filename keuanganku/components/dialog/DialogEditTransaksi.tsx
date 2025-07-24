@@ -1,5 +1,4 @@
 'use client';
-
 import {
     Dialog,
     DialogPanel,
@@ -8,7 +7,7 @@ import {
     TransitionChild,
     Description,
 } from '@headlessui/react';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { AkunResponse } from '@/types/akun';
 import { KategoriResponse } from '@/types/kategori';
 import { TransaksiResponse } from '@/types/transaksi';
@@ -89,40 +88,43 @@ export default function DialogEditTransaksi({
         }
     }, [transaksiData]);
 
-    useEffect(() => {
-        const fetchKategori = async () => {
-            setIsLoadingKategori(true);
-            try {
-                const response = await getFilteredKategori();
-                if (response.success && response.data) {
-                    const semuaKategori: KategoriResponse[] = response.data.content;
-                    setKategoriPengeluaran(semuaKategori.filter(k => k.jenis === 1));
-                    setKategoriPemasukan(semuaKategori.filter(k => k.jenis === 2));
-                } else {
-                    throw new Error("Terjadi kesalahan ketika mengambil data kategori");
-                }
-            } catch (e: any) {
-                setError(e.message);
-            } finally {
-                setIsLoadingKategori(false);
+    const fetchKategori = useCallback(async () => {
+        setIsLoadingKategori(true);
+        try {
+            const response = await getFilteredKategori();
+            if (response.success && response.data) {
+                const semuaKategori: KategoriResponse[] = response.data.content;
+                setKategoriPengeluaran(semuaKategori.filter(k => k.jenis === 1));
+                setKategoriPemasukan(semuaKategori.filter(k => k.jenis === 2));
+            } else {
+                throw new Error("Terjadi kesalahan ketika mengambil data kategori");
             }
-        };
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setIsLoadingKategori(false);
+        }
+    }, []);
 
+    useEffect(() => {
         if (isOpen) {
             fetchKategori();
         }
-    }, [isOpen]);
-    useEffect(() => {
-        // Hanya saat mode tambah dan kategori sudah selesai dimuat
-        if (isLoadingKategori || transaksiData) return;
+    }, [isOpen, fetchKategori]);
 
-        const listBaru = jenisTransaksi === 1 ? listKategoriPengeluaran : listKategoriPemasukan;
+    const setFirstKategoriForJenis = useCallback((jenis: number) => {
+        const listBaru = jenis === 1 ? listKategoriPengeluaran : listKategoriPemasukan;
         if (listBaru.length > 0) {
             setKategoriId(listBaru[0].id);
         } else {
             setKategoriId("");
         }
-    }, [isLoadingKategori, jenisTransaksi, listKategoriPengeluaran, listKategoriPemasukan, transaksiData]);
+    }, [listKategoriPengeluaran, listKategoriPemasukan]);
+
+    const handleJenisTransaksiChange = (newJenis: 1 | 2) => {
+        setJenisTransaksi(newJenis);
+        setFirstKategoriForJenis(newJenis);
+    };
 
     const handleSekarang = () => {
         setTanggal(formatDateForInput(new Date()));
@@ -134,22 +136,18 @@ export default function DialogEditTransaksi({
             toast.error("Data transaksi tidak valid!");
             return;
         }
-
         const akun = akunOptions.find(a => a.id === akunId);
         if (!akun) {
             toast.error("Akun tidak valid!");
             return;
         }
-
         if (!kategoriId) {
             toast.error("Silakan pilih kategori.");
             return;
         }
-
         try {
             const parsedDate = new Date(tanggal);
             if (isNaN(parsedDate.getTime())) throw new Error("Invalid date");
-
             onSubmit({
                 id: transaksiData.id,
                 idKategori: kategoriId,
@@ -186,7 +184,6 @@ export default function DialogEditTransaksi({
                 >
                     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
                 </TransitionChild>
-
                 <div className="fixed inset-0 flex items-center justify-center p-4">
                     <TransitionChild
                         as={Fragment}
@@ -204,7 +201,6 @@ export default function DialogEditTransaksi({
                             <Description className="text-sm text-gray-500 dark:text-gray-300 mt-2">
                                 Edit detail transaksi keuangan.
                             </Description>
-
                             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
                                 {/* Akun */}
                                 <div>
@@ -220,13 +216,14 @@ export default function DialogEditTransaksi({
                                         ))}
                                     </select>
                                 </div>
-
+                                
                                 {/* Jenis Transaksi */}
                                 <div>
                                     <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Jenis Transaksi</label>
                                     <select
                                         value={jenisTransaksi}
-                                        onChange={e => setJenisTransaksi(Number(e.target.value) as 1 | 2)}
+                                        // onChange={e => setJenisTransaksi(Number(e.target.value) as 1 | 2)}
+                                        onChange={e => handleJenisTransaksiChange(Number(e.target.value) as 1 | 2)}
                                         className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600"
                                         required
                                     >
@@ -234,7 +231,7 @@ export default function DialogEditTransaksi({
                                         <option value={2}>Pemasukan</option>
                                     </select>
                                 </div>
-
+                                
                                 {/* Kategori */}
                                 <div>
                                     <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Kategori</label>
@@ -258,7 +255,7 @@ export default function DialogEditTransaksi({
                                         </select>
                                     )}
                                 </div>
-
+                                
                                 {/* Jumlah */}
                                 <div>
                                     <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Jumlah</label>
@@ -285,7 +282,7 @@ export default function DialogEditTransaksi({
                                         required
                                     />
                                 </div>
-
+                                
                                 {/* Tanggal */}
                                 <div>
                                     <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Tanggal</label>
@@ -306,7 +303,7 @@ export default function DialogEditTransaksi({
                                         </button>
                                     </div>
                                 </div>
-
+                                
                                 {/* Catatan */}
                                 <div>
                                     <label className="text-xs font-medium block mb-1 text-gray-700 dark:text-white">Catatan (Opsional)</label>
@@ -317,7 +314,7 @@ export default function DialogEditTransaksi({
                                         className="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 resize-none"
                                     />
                                 </div>
-
+                                
                                 {/* Aksi */}
                                 <div className="flex justify-end gap-2 pt-4">
                                     <button
