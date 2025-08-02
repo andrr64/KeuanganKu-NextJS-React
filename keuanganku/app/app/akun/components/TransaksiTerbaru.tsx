@@ -49,7 +49,7 @@ export default function TransaksiTerbaruSection({
       {/* Judul Seksi */}
       <h2 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-white flex items-center gap-2">
         <FaReceipt className="text-indigo-600" />
-        Transaksi Terbaru
+        Transaksi
       </h2>
 
       {/* Card Content */}

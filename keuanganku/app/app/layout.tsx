@@ -1,7 +1,6 @@
 'use client'
 
-import { logout } from '@/actions/auth'
-import { ROUTES } from '@/lib/routes'
+import { WEB_ROUTE } from '@/lib/routes'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Loading from '@/components/Loading'
@@ -10,21 +9,16 @@ import { ThemeToggleButton } from '@/components/ThemeToggleButton'
 import {
   FaBars,
   FaThLarge,
-  FaExchangeAlt,
-  FaUserFriends,
-  FaCommentAlt,
   FaBoxOpen,
   FaFileAlt,
   FaChartLine,
-  FaMagic,
   FaCog,
-  FaShieldAlt,
   FaSignOutAlt,
-  FaMoneyBillWave,
 } from 'react-icons/fa'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import { handler_AuthLogout } from '@/actions/v2/handlers/auth'
 
 const MENU_LIST = [
   {
@@ -61,18 +55,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isActive = (href: string) => pathname === href
 
-  const handleLogout = async () => {
-    setConfirmOpen(true)
-  }
-
-  const handleConfirmLogout = async () => {
+  const handleConfirmLogout = () => {
     setConfirmOpen(false)
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    await logout()
-    router.push(ROUTES.AUTH.LOGIN)
-    setLoading(false)
-    toast.success('Berhasil logout')
+    handler_AuthLogout({
+      setLoading,
+      whenSuccess: () => {router.push(WEB_ROUTE.AUTH.LOGIN); },
+      toaster: toast
+    })
   }
 
   return (
@@ -122,7 +111,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <li key={index}>
                       {item.isButton ? (
                         <button
-                          onClick={handleLogout}
+                          onClick={() => setConfirmOpen(true)}
                           disabled={loading}
                           className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                         >

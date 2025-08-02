@@ -26,7 +26,7 @@ export default function RingkasanUangSection({
             {/* Heading */}
             <h2 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-white flex items-center gap-2">
                 <FaCoins className="text-indigo-600" />
-                Ringkasan Keuangan
+                Transaksi Tiap Kategori
             </h2>
 
             {/* Card */}

@@ -1,9 +1,9 @@
 'use client';
 
-import { login } from '@/actions/auth';
+import { handler_AuthLogin } from '@/actions/v2/handlers/auth';
 import Loading from '@/components/Loading';
 import { ThemeToggleButton } from '@/components/ThemeToggleButton';
-import { ROUTES } from '@/lib/routes';
+import { WEB_ROUTE } from '@/lib/routes';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -15,19 +15,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const login = (e: any) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await login(email, password);
-      toast.success(res.message || 'Login berhasil');
-      router.push(ROUTES.HOME);
-    } catch (err: any) {
-      toast.error(err.message || 'Terjadi kesalahan saat login');
-    } finally {
-      setLoading(false);
-    }
-  };
+    handler_AuthLogin({
+      toaster: toast,
+      setLoading,
+      whenSuccess: () => {
+        router.push(WEB_ROUTE.HOME)
+      }
+    }, { email, password });
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors duration-300 px-4 sm:px-6">
@@ -36,7 +33,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white dark:bg-gray-800 text-black dark:text-white rounded-lg shadow-md p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-center sm:text-left">Login</h1>
         <p className="text-sm mb-6 text-center sm:text-left">Hai, Selamat datang kembali 👋</p>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={login}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm mb-1">Email</label>
             <input
@@ -84,7 +81,7 @@ export default function LoginPage() {
 
         <p className="text-sm text-center mt-6">
           Belum punya akun?{' '}
-          <a href={ROUTES.AUTH.REGISTER} className="text-indigo-500 hover:underline font-medium">
+          <a href={WEB_ROUTE.AUTH.REGISTER} className="text-indigo-500 hover:underline font-medium">
             Daftar sekarang
           </a>
         </p>

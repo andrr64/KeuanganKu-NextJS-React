@@ -34,15 +34,15 @@ import ListAkunSection from './akun/components/ListAkun';
 import CashflowChartSection from './components/CashflowChart';
 import StatistikRingkasSection from './components/StatistikRingkasan';
 import TransaksiTerakhirSection from './components/TransaksiTerakhir';
-import DialogEditTransaksi from '@/components/dialog/DialogEditTransaksi';
-import DialogTambahGoal from '@/components/dialog/DialogTambahGoal';
-import DialogTambahKategori from '@/components/dialog/DialogTambahKategori';
-import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
+import DialogEditTransaksi from '@/components/dialog/transaksi/DialogEditTransaksi';
+import DialogTambahGoal from '@/components/dialog/goal/DialogTambahGoal';
+import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKategori';
+import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
-import AddAccountDialog from '@/components/dialog/DialogTambahAkun';
+import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
 import RingkasanGoalSection from './components/RingkasanGoal';
 import KategoriStatistikSection from './components/KategoriStatistikSection';
-import EditAccountDialog from '@/components/dialog/DialogEditAkun';
+import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
 
 export default function DashboardPage() {
   const [selectedTrx, setSelectedTrx] = useState<TransaksiResponse | null>(null);
@@ -257,14 +257,14 @@ export default function DashboardPage() {
       {/* Dialog Tambah */}
       <DialogTambahTransaksi
         isOpen={isOpenTambahTransaksi}
-        isLoading={false}
         akunOptions={listAkun}
-        onClose={() => setIsOpenTambahTransaksi(false)}
-        onSubmit={handleTambahTransaksi}
-      />
+        closeDialog={() => setIsOpenTambahTransaksi(false)} 
+        whenSuccess={() => {
+          setIsOpenTambahTransaksi(false);
+          fetchData()
+        }}/>
       <DialogTambahGoal
         isOpen={isOpenTambahGoal}
-        isLoading={false}
         onClose={() => setIsOpenTambahGoal(false)}
         onSubmit={(nama, target, tanggalTarget) => {
           handleTambahGoal(nama, target, tanggalTarget);
@@ -275,19 +275,14 @@ export default function DashboardPage() {
         isOpen={isOpenTambahKategori}
         isLoading={false}
         onClose={() => setIsOpenTambahKategori(false)}
-        onSubmit={(nama, jenis) => {
-          console.log("Tambah kategori:", { nama, jenis });
-          setIsOpenTambahKategori(false);
-          fetchData();
-        }}
       />
-      <AddAccountDialog
+      <DialogTambahAkun
         isOpen={isOpenTambahAkun}
         isLoading={false}
         onClose={() => setIsOpenTambahAkun(false)}
         onSubmit={handleTambahAkun}
       />
-      <EditAccountDialog
+      <DialogEditAkun
         isOpen={isOpenEditAkun}
         isLoading={false}
         akun={akunYangDiedit}
@@ -306,11 +301,13 @@ export default function DashboardPage() {
         isLoading={false}
         transaksiData={selectedTrx}
         akunOptions={listAkun}
-        onClose={() => {
+        closeDialog={() => {
           setDialogEditTrx(false);
-          setSelectedTrx(null);
         }}
-        onSubmit={handleEditTransaksi}
+        whenSuccess={() => {
+          setSelectedTrx(null);
+          fetchData()
+        }}
       />
       <ConfirmDialog
         isOpen={dialogHapusTrx}

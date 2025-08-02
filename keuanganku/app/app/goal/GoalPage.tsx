@@ -6,31 +6,35 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { FaTimes } from 'react-icons/fa'
 import GoalHeader from './componentns/Header'
-import DialogTambahGoal from '@/components/dialog/DialogTambahGoal'
-import DialogEditGoal from '@/components/dialog/DialogEditGoal'
-import DialogTambahUangGoal from '@/components/dialog/DialogTambahUangGoal'
+import DialogTambahGoal from '@/components/dialog/goal/DialogTambahGoal'
+import DialogEditGoal from '@/components/dialog/goal/DialogEditGoal'
+import DialogTambahUangGoal from '@/components/dialog/goal/DialogTambahUangGoal'
 import GoalItem from '../../../components/items/GoalItem'
 import { handleApiAction } from '@/lib/api'
-import DialogKurangiUangGoal from '@/components/dialog/DialogKurangiUangGoal'
+import DialogKurangiUangGoal from '@/components/dialog/goal/DialogKurangiUangGoal'
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi'
+import { useDialog } from '@/hooks/dialog'
+import { handler_DeleteGoal, handler_GetGoal, handler_PatchAddGoalFunds, handler_PutGoal, handler_PatchGoalStatus, handler_PatchSubtractGoalFunds, handler_PostGoal } from '@/actions/v2/handlers/goal'
+import { GoalModel } from '@/models/Goal'
+import LoadingP from '@/components/LoadingP'
+import { confirmDialog } from '@/lib/confirm-dialog'
 
 const formatRupiah = (val: number) => Intl.NumberFormat('id-ID').format(val)
 
 export default function GoalPage() {
-  const [goalss, setGoalss] = useState<GoalResponse[]>([])
+  const [goalss, setGoalss] = useState<GoalModel[]>([])
   const [searchKeyword, setSearchKeyword] = useState('')
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(5)
   const [loading, setLoading] = useState(false)
   const [filterTercapai, setFilterTercapai] = useState<boolean | undefined>(undefined)
-
-  const [isOpenTambah, setIsOpenTambah] = useState(false)
-  const [isOpenEdit, setIsOpenEdit] = useState(false)
-  const [isOpenTambahUang, setIsOpenTambahUang] = useState(false)
-  const [isOpenKurangiUang, setIsOpenKurangiUang] = useState(false)
-  const [isOpenHapus, setIsOpenHapus] = useState(false)
-
   const [selectedGoal, setSelectedGoal] = useState<GoalResponse | null>(null)
+
+  const tambahDialog = useDialog()
+  const editDialog = useDialog()
+  const tambahUangDialog = useDialog()
+  const kurangiUangDialog = useDialog()
+  const hapusDialog = useDialog()
 
   const totalPages = Math.ceil(goalss.length / size)
 
@@ -40,158 +44,160 @@ export default function GoalPage() {
     return 'bg-green-500'
   }
 
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const response = await getFilteredGoal({ page, size, keyword: searchKeyword, tercapai: filterTercapai })
-      if (response.success) {
-        setGoalss(response.data!.content)
-      } else {
-        throw new Error(response.message)
+  const fetchData = () => {
+    handler_GetGoal(
+      {
+        setLoading,
+        whenSuccess: (pageableData) => {
+          setGoalss(pageableData.content)
+        },
+        whenFailed: (msg) => toast.error(msg)
+      },
+      {
+        page, size, keyword: searchKeyword, tercapai: filterTercapai
       }
-    } catch (e: any) {
-      toast.error(`Error: ${e.message}`)
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   const handleTambahGoal = (nama: string, target: number, tanggalTarget: string) => {
-    setLoading(true)
-    handleApiAction({
-      action: () => tambahGoal({ nama, target, tanggalTarget }),
-      successMessage: 'Goal berhasil ditambahkan',
-      onSuccess: () => {
-        setIsOpenTambah(false)
-        fetchData()
+    handler_PostGoal(
+      {
+        setLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          fetchData()
+          tambahDialog.close()
+        }
       },
-      onFinally: () => setLoading(false),
-    })
+      { nama, target, tanggalTarget }
+    )
   }
 
   const handleEditGoal = (id: string, nama: string, target: number, tanggalTarget: string) => {
-    if (!selectedGoal) return
-    setLoading(true)
-    handleApiAction({
-      action: () => updateGoal({ id, nama, target, tanggalTarget }),
-      successMessage: 'Goal berhasil diperbarui',
-      onSuccess: () => {
-        setIsOpenEdit(false)
-        fetchData()
+    handler_PutGoal(
+      {
+        toaster: toast,
+        whenSuccess: () => {
+          fetchData()
+          editDialog.close()
+        }
       },
-      onFinally: () => setLoading(false),
-    })
+      { id, nama, target, tanggalTarget }
+    )
   }
 
-  const handleCheckPress = (goal: GoalResponse) => {
-    setLoading(true)
-    handleApiAction({
-      action: () => updateStatus({ id: goal.id, status: !goal.tercapai }),
-      onSuccess: fetchData,
-      onFinally: () => setLoading(false),
-    })
+  const handleToggleStatus = (goal: GoalModel) => {
+    handler_PatchGoalStatus(
+      {
+        setLoading,
+        whenSuccess: () => {
+          fetchData();
+        },
+        whenFailed: (msg) => {
+          toast.error(msg)
+        }
+      },
+      {
+        id: goal.id, tercapai: !goal.tercapai
+      }
+    )
   }
 
-  const handleTambahUang = (jumlah: number) => {
+  const handleTambahUang = (uang: number) => {
     if (!selectedGoal) return
-    setLoading(true)
-
-    handleApiAction({
-      action: () => tambahUangGoal({ id: selectedGoal.id, uang: jumlah }),
-      successMessage: 'Uang berhasil ditambahkan',
-      onSuccess: () => {
-        fetchData()
-        setSelectedGoal(null)
-        setIsOpenTambahUang(false)
+    handler_PatchAddGoalFunds(
+      {
+        setLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          setSelectedGoal(null)
+          tambahUangDialog.close()
+          fetchData()
+        }
       },
-      onFinally: () => setLoading(false),
-    })
+      { id: selectedGoal.id, uang }
+    )
   }
 
-  const handleKurangiUang = (jumlah: number) => {
+  const handleKurangiUang = (uang: number) => {
     if (!selectedGoal) return
-    setLoading(true)
-
-    handleApiAction({
-      action: () => kurangiUangGoal({ id: selectedGoal.id, uang: jumlah }),
-      successMessage: 'Uang berhasil dikurangi',
-      onSuccess: () => {
-        fetchData()
-        setSelectedGoal(null)
-        setIsOpenKurangiUang(false)
+    handler_PatchSubtractGoalFunds(
+      {
+        setLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          setSelectedGoal(null)
+          kurangiUangDialog.close()
+          fetchData()
+        }
       },
-      onFinally: () => setLoading(false),
-    })
+      { id: selectedGoal.id, uang }
+    )
   }
 
   const handleHapus = () => {
-    if (!selectedGoal) return
-    setLoading(true)
-
-    handleApiAction({
-      action: () => hapusGoal(selectedGoal.id),
-      successMessage: 'Uang berhasil dihapus',
-      onSuccess: () => {
-        fetchData()
-        setSelectedGoal(null)
-        setIsOpenHapus(false)
+    if (!selectedGoal) return;
+    confirmDialog.show({
+      title: 'Hapus Goal?',
+      description: 'Tindakan ini tidak bisa dibatalkan.',
+      confirmText: 'Hapus',
+      cancelText: 'Batal',
+      onConfirm: () => {
+        handler_DeleteGoal(
+          {
+            setLoading,
+            toaster: toast,
+            whenSuccess: () => {
+              setSelectedGoal(null);
+              hapusDialog.close()
+              fetchData()
+            }
+          },
+          selectedGoal.id
+        )
       },
-      onFinally: () => setLoading(false),
-    })
+    });
   }
 
   useEffect(() => {
     fetchData()
   }, [page, size, searchKeyword, filterTercapai])
 
+
   return (
     <>
-      <ConfirmDialog
-        isOpen={isOpenHapus}
-        title='Hapus Goal'
-        description='Anda yakin? data tidak bisa dikembalikan.'
-        confirmText='Ya, hapus'
-        onClose={() => setIsOpenHapus(false)}
-        onConfirm={() => {
-          if (selectedGoal) handleHapus()
-        }}
-      />
       <DialogTambahGoal
-        isOpen={isOpenTambah}
-        isLoading={loading}
-        onClose={() => setIsOpenTambah(false)}
+        isOpen={tambahDialog.isOpen}
+        onClose={tambahDialog.close}
         onSubmit={handleTambahGoal}
       />
-
       <DialogEditGoal
-        isOpen={isOpenEdit}
-        isLoading={loading}
+        isOpen={editDialog.isOpen}
         data={selectedGoal}
-        onClose={() => setIsOpenEdit(false)}
+        onClose={editDialog.close}
         onSubmit={handleEditGoal}
       />
       <DialogKurangiUangGoal
-        isOpen={isOpenKurangiUang}
+        isOpen={kurangiUangDialog.isOpen}
         isLoading={loading}
-        onClose={() => setIsOpenKurangiUang(false)}
+        onClose={kurangiUangDialog.close}
         onSubmit={handleKurangiUang}
       />
-
       <DialogTambahUangGoal
-        isOpen={isOpenTambahUang}
+        isOpen={tambahUangDialog.isOpen}
         isLoading={loading}
-        onClose={() => setIsOpenTambahUang(false)}
+        onClose={tambahUangDialog.close}
         onSubmit={handleTambahUang}
       />
 
+      {/* Main Content */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 sm:p-6 md:p-8">
         <div className="max-w-[1080px] mx-auto md:mx-0">
           <GoalHeader
-            onTambahGoal={() => setIsOpenTambah(true)}
+            onTambahGoal={tambahDialog.open}
             onImport={() => { }}
             onExport={() => { }}
           />
-
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <div className="mb-6">
               <h2 className="text-md font-semibold">Daftar Goal</h2>
@@ -206,7 +212,7 @@ export default function GoalPage() {
                 <label className="text-xs font-medium block mb-1">Jumlah Data</label>
                 <select
                   value={size}
-                  onChange={e => {
+                  onChange={(e) => {
                     setPage(0)
                     setSize(parseInt(e.target.value))
                   }}
@@ -216,11 +222,10 @@ export default function GoalPage() {
                   <option value={10}>10 data</option>
                 </select>
               </div>
-
               <div className="md:col-span-2">
                 <label className="text-xs font-medium block mb-1">Filter Status</label>
                 <select
-                  onChange={e => {
+                  onChange={(e) => {
                     setPage(0)
                     const val = e.target.value
                     setFilterTercapai(val === 'all' ? undefined : val === 'true')
@@ -232,7 +237,6 @@ export default function GoalPage() {
                   <option value="false">Belum Tercapai</option>
                 </select>
               </div>
-
               <div className="md:col-span-3">
                 <label className="text-xs font-medium block mb-1">Cari Goal</label>
                 <div className="relative">
@@ -259,13 +263,14 @@ export default function GoalPage() {
               </div>
             </div>
 
+            {/* Goal List */}
             <ul className="divide-y md:min-h-[480px] divide-gray-200 dark:divide-gray-700">
               {goalss.length === 0 ? (
                 <li className="text-sm text-gray-500 py-6 text-center">
                   Tidak ada goal yang ditemukan.
                 </li>
               ) : (
-                goalss.map(goal => {
+                goalss.map((goal) => {
                   const progress = Math.min((goal.terkumpul / goal.target) * 100, 100)
                   return (
                     <GoalItem
@@ -274,22 +279,22 @@ export default function GoalPage() {
                       progress={progress}
                       formatRupiah={formatRupiah}
                       getProgressColor={getProgressColor}
-                      onCheckPress={handleCheckPress}
+                      onCheckPress={handleToggleStatus}
                       onEdit={() => {
                         setSelectedGoal(goal)
-                        setIsOpenEdit(true)
+                        editDialog.open()
                       }}
                       onKurangiUang={() => {
                         setSelectedGoal(goal)
-                        setIsOpenKurangiUang(true)
+                        kurangiUangDialog.open()
                       }}
                       onTambahUang={() => {
                         setSelectedGoal(goal)
-                        setIsOpenTambahUang(true)
+                        tambahUangDialog.open()
                       }}
                       onHapus={() => {
-                        setSelectedGoal(goal);
-                        setIsOpenHapus(true);
+                        setSelectedGoal(goal)
+                        handleHapus()
                       }}
                     />
                   )
@@ -297,9 +302,10 @@ export default function GoalPage() {
               )}
             </ul>
 
+            {/* Pagination */}
             <div className="mt-4 flex justify-end items-center gap-2 text-sm">
               <button
-                onClick={() => setPage(p => Math.max(0, p - 1))}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
                 className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
               >
@@ -307,7 +313,7 @@ export default function GoalPage() {
               </button>
               <span>Halaman {page + 1} dari {totalPages}</span>
               <button
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={page >= totalPages - 1}
                 className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
               >

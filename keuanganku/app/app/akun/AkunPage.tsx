@@ -2,416 +2,416 @@
 
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { ambilTransaksi, deleteTransaksi, EditTransaksiParams, getRingkasan, RingkasanKategoriItem, RingkasanKategoriResponse, updateTransaksi } from '@/actions/transaksi';
-import { format } from 'date-fns';
-import AddAccountDialog from '@/components/dialog/DialogTambahAkun';
-import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
-import LoadingP from '@/components/LoadingP';
-import ErrorPage from '@/components/pages/ErrorPage';
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
+import { useDialog } from '@/hooks/dialog';
+import { AkunResponse } from '@/types/akun';
+import { TransaksiResponse } from '@/types/transaksi';
+import { TransaksiModel } from '@/models/Transaksi';
+import { getRingkasan, RingkasanKategoriItem, RingkasanKategoriResponse } from '@/actions/transaksi';
+import { getColors } from '@/lib/utils';
+import { confirmDialog } from '@/lib/confirm-dialog';
+import { handleApiAction } from '@/lib/api';
+
+// Handlers (akan diisi ulang di platform lain, seperti React Native)
+import {
+  handler_GetAkun,
+  handler_PostAkun,
+  handler_PatchAkun_nama,
+} from '@/actions/v2/handlers/akun';
+import { handler_GetTransaksi, handler_DeleteTransaksi } from '@/actions/v2/handlers/transaksi';
+
+// Komponen UI (bisa diganti saat porting)
+import Header from './components/Header';
 import ListAkunSection from './components/ListAkun';
 import TransaksiTerbaruSection from './components/TransaksiTerbaru';
 import RingkasanUangSection from './components/RingkasanUang';
 import EmptyAkunState from './components/EmptyAkunState';
-import Header from './components/Header';
+import LoadingP from '@/components/LoadingP';
+import ErrorPage from '@/components/pages/ErrorPage';
+import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
+import DialogEditTransaksi from '@/components/dialog/transaksi/DialogEditTransaksi';
+import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
+import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
+import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
+import { AkunModel } from '@/models/Akun';
+import { title } from 'process';
+import { handler_HapusAkun } from '@/actions/handler/transaksi';
 
-import { AkunResponse } from '@/types/akun';
-import { TransaksiResponse } from '@/types/transaksi';
-import EditAccountDialog from '@/components/dialog/DialogEditAkun';
-import DialogTambahTransaksi from '@/components/dialog/DialogTambahTransaksi';
-import { tambahTransaksi, TambahTransaksiParams } from '@/actions/transaksi';
-import DialogEditTransaksi from '@/components/dialog/DialogEditTransaksi';
-import { handleApiAction } from '@/lib/api';
-import { getColors } from '@/lib/utils';
-import { action_v2_DeleteAkun, action_v2_FetchAkun, action_v2_PostAkun, action_v2_PutAkun } from '@/actions/v2/akun';
-import { PostTransaksiBody, PutTransaksiBody } from '@/types/request/transaksi';
-import { action_v2_DeleteTransaksi, action_v2_FetchTransaksi, action_v2_PostTransaksi, action_v2_PutTransaksi } from '@/actions/v2/transaksi';
-import { runHandler } from '@/actions/handlerWrapper';
-
+// Tipe tambahan
 type RingkasanKategoriItemWithColor = RingkasanKategoriItem & { warna: string };
 
-
 export default function AkunPage() {
-  const [listAkun, setListAkun] = useState<AkunResponse[]>([]);
-  const [isAkunEmpty, setIsAkunEmpty] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loadingFetch, setLoadingFetch] = useState(true);
+  // State
+  const [accountList, setAccountList] = useState<AkunResponse[]>([]);
+  const [isAccountEmpty, setIsAccountEmpty] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [isOpenTambahAkun, setIsOpenTambahAkun] = useState(false);
-  const [isOpenHapusAkun, setIsOpenHapusAkun] = useState(false);
-  const [isOpenEditNamaAkun, setIsOpenEditAKun] = useState(false);
-  const [idAkunHapus, setIdAkunHapus] = useState<string | null>(null);
-  const [isOpenTambahTransaksi, setIsOpenTambahTransaksi] = useState(false);
+  // Dialogs
+  const addAccountDialog = useDialog();
+  const editAccountDialog = useDialog();
+  const deleteAccountDialog = useDialog();
+  const addTransactionDialog = useDialog();
+  const editTransactionDialog = useDialog();
 
-  const [periode, setPeriode] = useState<number>(1);
-  const [filterWaktu, setFilterWaktu] = useState('semua');
-  const [filterAkun, setFilterAkun] = useState('semua');
-  const [jenisTransaksi, setJenisTransaksi] = useState(0); // 0 = semua, 1 = keluar, 2 = masuk
-  const [akunYangDiedit, setAkunYangDiedit] = useState<AkunResponse | null>(null);
-
-  const [ringkasanListPengeluaran, setRingkasanListPengeluaran] = useState<RingkasanKategoriItemWithColor[]>([]);
-  const [ringkasanListPemasukan, setRingkasanListPemasukan] = useState<RingkasanKategoriItemWithColor[]>([]);
-  const [transaksiTerbaru, setTransaksiTerbaru] = useState<TransaksiResponse[]>([]);
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(5);
+  // Filters & Pagination
+  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+  const [timeFilter, setTimeFilter] = useState<string>('semua');
+  const [accountFilter, setAccountFilter] = useState('semua');
+  const [transactionType, setTransactionType] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dialogEditTrx, setDialogEditTrx] = useState(false);
-  const [dialogHapusTrx, setDialogHapusTrx] = useState(false);
-  const [selectedTrx, setSelectedTrx] = useState<TransaksiResponse | null>(null);
 
-  const akunOptions = ['semua', ...listAkun.map((a) => a.nama)];
+  // Derived states
+  const accountOptions = ['semua', ...accountList.map((acc) => acc.nama)];
+  const [summaryExpenseList, setSummaryExpenseList] = useState<RingkasanKategoriItemWithColor[]>([]);
+  const [summaryIncomeList, setSummaryIncomeList] = useState<RingkasanKategoriItemWithColor[]>([]);
+  const [latestTransactions, setLatestTransactions] = useState<TransaksiResponse[]>([]);
 
-  const fetchRingkasan = async () => {
-    setLoading(true);
+  // Selected items
+  const [editingAccount, setEditingAccount] = useState<AkunResponse | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransaksiResponse | null>(null);
+
+  // --- Fetch Functions (Modular & Reusable) ---
+
+  const fetchSummary = async () => {
+    setIsLoading(true);
     await handleApiAction<RingkasanKategoriResponse>({
-      action: () => getRingkasan(periode),
+      action: () => getRingkasan(selectedPeriod),
       onSuccess: (data) => {
-        const warnaPengeluaran = getColors(data.pengeluaran.length);
-        const warnaPemasukan = getColors(data.pemasukan.length);
-        setRingkasanListPengeluaran(
-          data.pengeluaran.map((e, i) => ({
-            ...e,
-            warna: warnaPengeluaran[i],
+        const expenseColors = getColors(data.pengeluaran.length);
+        const incomeColors = getColors(data.pemasukan.length);
+
+        setSummaryExpenseList(
+          data.pengeluaran.map((item, index) => ({
+            ...item,
+            warna: expenseColors[index],
           }))
         );
-        setRingkasanListPemasukan(
-          data.pemasukan.map((e, i) => ({
-            ...e,
-            warna: warnaPemasukan[i],
+
+        setSummaryIncomeList(
+          data.pemasukan.map((item, index) => ({
+            ...item,
+            warna: incomeColors[index],
           }))
         );
       },
-      onFinally: () => setLoading(false),
+      onFinally: () => setIsLoading(false),
     });
   };
 
-  const fetchTransaksi = async () => {
-    const now = new Date();
-    let startDate: string;
-    const endDate = format(now, 'dd/MM/yyyy');
+  const fetchTransactions = async () => {
+    let startDate: string | undefined = undefined;
+    let endDate: string | undefined = undefined;
 
-    if (filterWaktu === 'hari') {
-      startDate = format(now, 'dd/MM/yyyy');
-    } else if (filterWaktu === 'minggu') {
-      const tujuhHariLalu = new Date(now);
-      tujuhHariLalu.setDate(now.getDate() - 6);
-      startDate = format(tujuhHariLalu, 'dd/MM/yyyy');
-    } else if (filterWaktu === 'bulan') {
-      const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
-      startDate = format(awalBulan, 'dd/MM/yyyy');
-    } else if (filterWaktu === 'tahun') {
-      const awalTahun = new Date(now.getFullYear(), 0, 1);
-      startDate = format(awalTahun, 'dd/MM/yyyy');
-    } else {
-      const defaultAwal = new Date(2000, 0, 1);
-      startDate = format(defaultAwal, 'dd/MM/yyyy');
+    if (timeFilter !== 'semua') {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const now = toZonedTime(new Date(), timezone);
+
+      if (timeFilter === 'hari') {
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        startDate = formatInTimeZone(startOfDay, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        endDate = formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+      } else if (timeFilter === 'minggu') {
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+        startDate = formatInTimeZone(sevenDaysAgo, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        endDate = formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+      } else if (timeFilter === 'bulan') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate = formatInTimeZone(startOfMonth, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        endDate = formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+      } else if (timeFilter === 'tahun') {
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        startDate = formatInTimeZone(startOfYear, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+        endDate = formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm:ssXXX");
+      }
     }
+
+    const accountId =
+      accountFilter !== 'semua'
+        ? accountList.find((acc) => acc.nama === accountFilter)?.id
+        : undefined;
 
     const params = {
       startDate,
       endDate,
-      jenis: jenisTransaksi === 0 ? undefined : jenisTransaksi,
-      idAkun:
-        filterAkun !== 'semua'
-          ? listAkun.find((a) => a.nama === filterAkun)?.id
-          : undefined,
-      page,
-      size,
+      jenis: transactionType === 0 ? undefined : transactionType,
+      idAkun: accountId,
+      page: currentPage,
+      size: pageSize,
       search: searchQuery || '',
-    }
+    };
 
-    console.log(params);
-
-    await runHandler(
-      setLoading,
-      async () => await action_v2_FetchTransaksi(
-        {
-          whenSuccess: (pageable) => {
-            setTransaksiTerbaru(pageable.content);
-            setTotalPages(pageable.totalPages);
-          },
-          whenFailed: (msg) => toast.error(msg)
-        },
-        params
-      )
-    )
+    await handler_GetTransaksi({
+      whenSuccess: (pageable) => {
+        setLatestTransactions(pageable.content);
+        setTotalPages(pageable.totalPages);
+      },
+      whenFailed: (err) => {
+        toast.error(err);
+      },
+    }, params);
   };
 
-  const fetchData = async (first: boolean = false) => {
-    try {
-      setLoadingFetch(first);
-      await new Promise((res) => setTimeout(res, 500));
-      await action_v2_FetchAkun({
-        whenSuccess(data) {
-          setListAkun(data);
-        },
-      });
-      await fetchTransaksi();
-      await fetchRingkasan();
-    } catch (error: any) {
-      setErrorMessage(error?.message || 'Terjadi kesalahan saat mengambil data.');
-    } finally {
-      setLoadingFetch(false);
-    }
+  const fetchAccounts = async () => {
+    await handler_GetAkun({
+      setLoading: setIsLoading,
+      whenSuccess: (accounts) => {
+        setAccountList(accounts);
+      },
+      whenFailed: (err) => {
+        toast.error(err);
+        setIsAccountEmpty(true);
+        setAccountList([]);
+      },
+    });
   };
 
-  const handleTambahAkun = (data: { nama: string; saldoAwal: number }) => {
+  // --- Action Handlers (siap di-port ke React Native) ---
+
+  const handleAddAccount = (data: { nama: string; saldoAwal: number }) => {
     if (!data.nama.trim()) return toast.error('Nama akun tidak boleh kosong.');
     if (data.saldoAwal < 0) return toast.error('Saldo awal tidak boleh negatif.');
 
-    runHandler(setLoading, async () => {
-      await action_v2_PostAkun(
-        {
-          whenSuccess: (msg) => {
-            toast.success(msg);
-            fetchData();
-            setIsOpenTambahAkun(false);
-          },
-          toaster: toast,
+    handler_PostAkun(
+      {
+        setLoading: setIsLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          refreshAllData();
+          addAccountDialog.close();
         },
-        { nama: data.nama, saldoAwal: data.saldoAwal }
-      );
-    });
+      },
+      { nama: data.nama, saldoAwal: data.saldoAwal }
+    );
   };
 
-  const handleEditNamaAkun = (id: string, namaBaru: string) => {
-    if (!namaBaru.trim()) return toast.error('Nama akun tidak boleh kosong.');
+  const handleEditAccount = (id: string, newName: string) => {
+    if (!newName.trim()) return toast.error('Nama akun tidak boleh kosong.');
 
-    runHandler(setLoading, async () => {
-      await action_v2_PutAkun(
-        {
-          whenSuccess: () => fetchData(),
-          toaster: toast,
+    handler_PatchAkun_nama(
+      {
+        setLoading: setIsLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          fetchAccounts();
+          editAccountDialog.close();
         },
-        { id, nama: namaBaru }
-      );
-    });
+      },
+      { id, nama: newName }
+    );
   };
 
-  const handleHapusAkun = (id: string) => {
-    runHandler(setLoading, async () => {
-      await action_v2_DeleteAkun(
-        {
-          whenSuccess: () => {
-            fetchData();
-            setIsOpenHapusAkun(false);
-            setIdAkunHapus(null);
-          },
-          toaster: toast,
-        },
-        id
-      );
-    });
-  };
-
-  const handleTambahTransaksi = (data: PostTransaksiBody) => {
-    runHandler(setLoading, async () => {
-      await action_v2_PostTransaksi(
-        {
-          whenSuccess: () => {
-            fetchData();
-            setIsOpenTambahTransaksi(false);
-          },
-          toaster: toast,
-        },
-        data
-      );
-    });
-  };
-
-  const handleEditTransaksi = (data: PutTransaksiBody) => {
-    runHandler(
-      setLoading,
-      async() => {
-        await action_v2_PutTransaksi(
-          {
+  const handleDeleteAccount = (akun: AkunModel) => {
+    confirmDialog.show(
+      {
+        title: "Hapus Akun?",
+        description: "Anda yakin? data tidak bisa dikembalikan",
+        confirmText: "Ya, hapus",
+        onConfirm: () => {
+          handler_HapusAkun({
+            toaster: toast,
+            setLoading: setIsLoading,
+            id: akun.id,
             whenSuccess: () => {
-              fetchData();
-              setDialogEditTrx(false);
+              refreshAllData();
+              deleteAccountDialog.close();
             },
-            toaster: toast
-          },
-          data
-        )
+          });
+        }
       }
     )
+    if (!akun?.id) return;
   };
 
-  const handleDeleteTransaksi = (data: TransaksiResponse) => {
-    runHandler(
-      setLoading,
-      async () => {
-        await action_v2_DeleteTransaksi(
+  const handleDeleteTransaction = (transaction: TransaksiModel) => {
+    if (!transaction) return;
+
+    confirmDialog.show({
+      title: 'Hapus transaksi',
+      description: 'Apakah anda yakin ingin menghapus transaksi ini? Data tidak dapat dikembalikan!',
+      confirmText: 'Ya, hapus',
+      onConfirm: () => {
+        handler_DeleteTransaksi(
           {
+            toaster: toast,
             whenSuccess: () => {
-              fetchData();
-              setDialogHapusTrx(false);
+              refreshAllData();
             },
-            toaster: toast
           },
-          data.id
-        )
-      }
-    )
-  }
+          transaction.id
+        );
+      },
+    });
+  };
+
+  const refreshAllData = async (showLoading = false) => {
+    try {
+      setIsFetching(showLoading);
+      await new Promise((res) => setTimeout(res, 500));
+      await fetchAccounts();
+      await fetchTransactions();
+      await fetchSummary();
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Terjadi kesalahan saat mengambil data.');
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  // --- Effects ---
 
   useEffect(() => {
-    fetchRingkasan();
-  }, [periode])
+    setIsAccountEmpty(accountList.length === 0);
+  }, [accountList]);
 
   useEffect(() => {
-    fetchData(true);
+    refreshAllData(true);
   }, []);
 
   useEffect(() => {
-    fetchTransaksi();
-  }, [filterWaktu, filterAkun, jenisTransaksi, page, size]);
+    fetchTransactions();
+  }, [timeFilter, accountFilter, transactionType, currentPage, pageSize]);
 
   useEffect(() => {
-    fetchTransaksi();
-    setPage(0);
-  }, [searchQuery])
+    fetchTransactions();
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   useEffect(() => {
-    setPage(0);
-  }, [filterWaktu, filterAkun, jenisTransaksi, size]);
+    setCurrentPage(0);
+  }, [timeFilter, accountFilter, transactionType, pageSize]);
 
+  useEffect(() => {
+    fetchSummary();
+  }, [selectedPeriod]);
+
+  // --- Render ---
 
   if (errorMessage) return <ErrorPage message={errorMessage} />;
-  if (loadingFetch) return <LoadingP />;
-
-  if (isAkunEmpty) {
+  if (isFetching) return <LoadingP />;
+  if (isAccountEmpty) {
     return (
       <>
-        <AddAccountDialog
-          isOpen={isOpenTambahAkun}
+        <DialogTambahAkun
+          isOpen={addAccountDialog.isOpen}
           isLoading={false}
-          onClose={() => setIsOpenTambahAkun(false)}
-          onSubmit={handleTambahAkun}
+          closeDialog={addAccountDialog.close}
+          whenSuccess={() => {
+            addAccountDialog.close()
+            fetchAccounts()
+          }}
         />
-        <EmptyAkunState onTambahClick={() => setIsOpenTambahAkun(true)} />
+        <EmptyAkunState onTambahClick={addAccountDialog.open} />
       </>
     );
   }
 
   return (
     <>
-      {/* Modal */}
+      {/* Dialogs */}
       <DialogEditTransaksi
-        isOpen={dialogEditTrx}
+        isOpen={editTransactionDialog.isOpen}
         isLoading={false}
-        onSubmit={(data) => handleEditTransaksi(data)} // ✅ ini menerima hasil input
-        onClose={() => setDialogEditTrx(false)}
-        akunOptions={listAkun}
-        transaksiData={selectedTrx}
+        closeDialog={editTransactionDialog.close}
+        akunOptions={accountList}
+        transaksiData={selectedTransaction}
+        whenSuccess={() => {
+          setSelectedTransaction(null);
+          refreshAllData();
+        }}
       />
 
-      <ConfirmDialog
-        isOpen={dialogHapusTrx}
-        onClose={() => setDialogHapusTrx(false)}
-        title='Hapus transaksi'
-        description='Data yang dihapus tidak akan bisa dikembalikan!'
-        confirmText='Ya, hapus!'
-        onConfirm={() => {
-          if (selectedTrx) {
-            handleDeleteTransaksi(selectedTrx)
-          }
-        }}
-      />
-      <ConfirmDialog
-        isOpen={isOpenHapusAkun}
-        onClose={() => {
-          setIsOpenHapusAkun(false);
-          setIdAkunHapus(null);
-        }}
-        title="Hapus Akun"
-        confirmText="Ya, Hapus Akun"
-        description="Anda yakin ingin menghapus akun ini? Semua transaksi akan dihapus dan tindakan ini tidak dapat dibatalkan."
-        onConfirm={() => idAkunHapus && handleHapusAkun(idAkunHapus)}
-      />
       <DialogTambahTransaksi
-        isOpen={isOpenTambahTransaksi}
-        isLoading={false}
-        onClose={() => setIsOpenTambahTransaksi(false)}
-        onSubmit={(data) => {
-          handleTambahTransaksi(data);
-        }}
-        akunOptions={listAkun}
-      />
-      <EditAccountDialog
-        isOpen={isOpenEditNamaAkun}
-        isLoading={false}
-        akun={akunYangDiedit}
-        onClose={() => {
-          setAkunYangDiedit(null);
-          setIsOpenEditAKun(false);
-        }}
-        onSubmit={(idAkun: string, namaBaru: string) => {
-          handleEditNamaAkun(idAkun, namaBaru);
-        }} />
-
-      <AddAccountDialog
-        isOpen={isOpenTambahAkun}
-        isLoading={false}
-        onClose={() => setIsOpenTambahAkun(false)}
-        onSubmit={handleTambahAkun}
+        isOpen={addTransactionDialog.isOpen}
+        closeDialog={addTransactionDialog.close}
+        whenSuccess={refreshAllData}
+        akunOptions={accountList}
       />
 
-      {/* Halaman */}
+      <DialogEditAkun
+        isOpen={editAccountDialog.isOpen}
+        akun={editingAccount}
+        closeDialog={() => {
+          setEditingAccount(null)
+          editAccountDialog.close()
+        }}
+        whenSuccess={() => {
+          setEditingAccount(null)
+          editAccountDialog.close()
+          fetchAccounts()
+        }}
+      />
+
+      <DialogTambahAkun
+        isOpen={addAccountDialog.isOpen}
+        isLoading={false}
+        closeDialog={addAccountDialog.close}
+        whenSuccess={() => {
+          addAccountDialog.close()
+          fetchAccounts()
+        }}
+      />
+
+      {/* Main Content */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
-        <div className='max-w-[1280px] flex flex-col gap-8 mx-auto md:mx-0'>
+        <div className="max-w-[1280px] flex flex-col gap-8 mx-auto md:mx-0">
           <Header
-            fetchData={() => fetchData(false)}
-            onTambahTransaksiClick={() => {
-              setIsOpenTambahTransaksi(true)
-            }}
-            onTambahAkunClick={() => setIsOpenTambahAkun(true)}
+            fetchData={() => refreshAllData(false)}
+            onTambahTransaksiClick={addTransactionDialog.open}
+            onTambahAkunClick={addAccountDialog.open}
           />
 
           <ListAkunSection
-            listAkun={listAkun}
+            listAkun={accountList}
             onEdit={(akun) => {
-              setAkunYangDiedit(akun);
-              setIsOpenEditAKun(true);
+              setEditingAccount(akun);
+              editAccountDialog.open();
             }}
             onHapus={(id) => {
-              setIdAkunHapus(id);
-              setIsOpenHapusAkun(true);
+              const akun = accountList.find((a) => a.id === id);
+              if (akun) {
+                handleDeleteAccount(akun)
+              }
             }}
           />
+
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <TransaksiTerbaruSection
               onClickTrx={(trx) => {
-                setSelectedTrx(trx);
-                setDialogEditTrx(true);
+                setSelectedTransaction(trx);
+                editTransactionDialog.open();
               }}
-              transaksi={transaksiTerbaru}
-              filterWaktu={filterWaktu}
-              filterAkun={filterAkun}
-              jenisTransaksi={jenisTransaksi}
-              akunOptions={akunOptions}
-              setFilterWaktu={setFilterWaktu}
-              setFilterAkun={setFilterAkun}
-              setJenisTransaksi={setJenisTransaksi}
-              page={page}
-              setPage={setPage}
+              onDelete={handleDeleteTransaction}
+              transaksi={latestTransactions}
+              filterWaktu={timeFilter}
+              filterAkun={accountFilter}
+              jenisTransaksi={transactionType}
+              akunOptions={accountOptions}
+              setFilterWaktu={setTimeFilter}
+              setFilterAkun={setAccountFilter}
+              setJenisTransaksi={setTransactionType}
+              page={currentPage}
+              setPage={setCurrentPage}
               totalPages={totalPages}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
-              size={size}
-              setSize={setSize}
-              onDelete={(trx) => {
-                setSelectedTrx(trx);
-                setDialogHapusTrx(true);
-              }}
+              size={pageSize}
+              setSize={setPageSize}
             />
+
             <RingkasanUangSection
-              periode={periode}
-              setPeriode={(e) => { setPeriode(e) }}
-              pengeluaranList={ringkasanListPengeluaran}
-              pemasukanList={ringkasanListPemasukan}
+              periode={selectedPeriod}
+              setPeriode={setSelectedPeriod}
+              pengeluaranList={summaryExpenseList}
+              pemasukanList={summaryIncomeList}
             />
           </section>
         </div>

@@ -1,5 +1,5 @@
-export const runHandler = async (setVal: any, fn: any) => {
-    setVal(true);
+export const runHandler = async (fn: any, setVal?: any) => {
+    setVal?.(true);
     await fn();
-    setVal(false);
+    setVal?.(false);
 }

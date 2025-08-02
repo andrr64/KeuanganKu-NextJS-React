@@ -5,7 +5,8 @@ import { AkunResponse } from "@/types/akun";
 export const tambahAkun = async (nama: string, saldoAwal: number) => {
     return fetcher(API_ROUTES.AKUN.POST, {
         method: 'POST',
-        body: JSON.stringify({ namaAkun: nama, saldoAwal }),
+        body: JSON.stringify({ namaAkun: nama, saldoAwal },
+        ),
     });
 }
 

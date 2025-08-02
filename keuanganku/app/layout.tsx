@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
+import GlobalConfirmDialog from "@/components/GlobalConfirmDialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           {children}
           <Toaster />
+          <GlobalConfirmDialog />
         </ThemeProvider>
       </body>
     </html>

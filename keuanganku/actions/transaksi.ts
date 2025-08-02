@@ -6,7 +6,7 @@ export interface TambahTransaksiParams {
   idKategori: string;
   idAkun: string;
   jumlah: number;
-  tanggal: string; // Format: 'dd/MM/yyyy HH:mm'
+  tanggal: string; 
   catatan?: string;
 }
 

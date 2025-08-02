@@ -1,121 +1,172 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import ListKategori from "./components/ListKategori";
-import HeaderKategori from "./components/Header";
-import { KategoriResponse } from "@/types/kategori";
-import DialogEditKategori from "@/components/dialog/DialogEditKategori";
-import DialogTambahKategori from "@/components/dialog/DialogTambahKategori";
-import { getFilteredKategori, postKategori, updateKategori } from "@/actions/kategori";
-import toast from "react-hot-toast";
+import { useEffect, useState } from 'react';
+import ListKategori from './ListKategori';
+import HeaderKategori from './Header';
+import { KategoriResponse } from '@/types/kategori';
+import toast from 'react-hot-toast';
+import {
+    handler_deleteKategori,
+    handler_fetchKategori,
+    handler_tambahKategori,
+    handler_updateKategori
+} from '@/actions/v2/handlers/kategori';
+import { useDialog } from '@/hooks/dialog';
+import FormDialog from '@/components/FormDialog';
+import {
+    fieldTambahKategori,
+    fieldUpdateKategori
+} from '@/components/fields/form_kategori';
+import { confirmDialog } from '@/lib/confirm-dialog';
 
 export default function KategoriPage() {
     const [kategoriList, setKategoriList] = useState<KategoriResponse[]>([]);
     const [totalPages, setTotalPages] = useState(0);
-    const [loadingFetch, setLoadingFetch] = useState(false);
-    const [kategoriDipilih, setKategoriDipilih] = useState<KategoriResponse | null>(null);
-    const [isOpenTambahKategori, setIsOpenTambahKategori] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [selectedKategori, setSelectedKategori] = useState<KategoriResponse | null>(null);
 
-    // Filter & pagination
+    // Dialog controllers
+    const editDialog = useDialog();
+    const tambahDialog = useDialog();
+
+    // Filters & pagination
     const [filterJenis, setFilterJenis] = useState<0 | 1 | 2>(0);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [page, setPage] = useState(0);
     const [size, setSize] = useState(5);
 
-    const fetchData = async () => {
-        setLoadingFetch(true);
-        try {
-            const response = await getFilteredKategori({
+    /**
+     * Fetch data with filters
+     */
+    const fetchData = () => {
+        handler_fetchKategori(
+            {
+                setLoading,
+                whenSuccess: (data) => {
+                    setKategoriList(data.content);
+                    setTotalPages(data.totalPages);
+                },
+                whenFailed: (msg) => {
+                    toast.error(msg);
+                    setKategoriList([]);
+                    setTotalPages(0);
+                },
+            },
+            {
                 page,
                 size,
                 keyword: searchKeyword.trim() || undefined,
                 jenis: filterJenis !== 0 ? filterJenis : undefined,
-            });
-
-            if (response?.data) {
-                setKategoriList(response.data.content);
-                setTotalPages(response.data.totalPages);
-            } else {
-                setKategoriList([]);
-                setTotalPages(0);
             }
-        } catch (e: any) {
-            toast.error("Gagal mengambil data kategori");
-        } finally {
-            setLoadingFetch(false);
-        }
+        );
     };
 
+    // Refetch when filters change
     useEffect(() => {
         fetchData();
     }, [filterJenis, searchKeyword, page, size]);
 
-    const handlePilihKategori = (kategori: KategoriResponse) => {
-        setKategoriDipilih(kategori);
+    /**
+     * Handlers
+     */
+    const handleEditClick = (kategori: KategoriResponse) => {
+        setSelectedKategori(kategori);
+        editDialog.open();
     };
 
-    const handleCloseDialog = () => {
-        setKategoriDipilih(null);
+    const handleUpdate = (data: { nama: string }) => {
+        if (!selectedKategori?.id) return;
+        handler_updateKategori(
+            {
+                toaster: toast,
+                whenSuccess: () => {
+                    toast.success('Kategori diperbarui');
+                    editDialog.close();
+                    fetchData();
+                },
+            },
+            { id: selectedKategori.id, nama: data.nama }
+        );
     };
 
-    const handleAddKategori = async (nama: string, jenis: 1 | 2) => {
-        setLoadingFetch(true);
-        try {
-            const response = await postKategori({ nama, jenis });
-            if (!response.success) throw new Error(response.message);
-            await fetchData(); // refresh data
-            setIsOpenTambahKategori(false);
-            toast.success(response.message);
-        } catch (e: any) {
-            toast.error(e.message);
-        } finally {
-            setLoadingFetch(false);
-        }
+    const handleCreate = (data: { nama: string; jenis: 1 | 2 }) => {
+        handler_tambahKategori(
+            {
+                toaster: toast,
+                whenSuccess: () => {
+                    toast.success('Kategori ditambahkan');
+                    tambahDialog.close();
+                    fetchData();
+                },
+            },
+            data
+        );
     };
 
-    const handleUpdateKategori = async (id: string, nama: string) => {
-        setLoadingFetch(true);
-        try {
-            const response = await updateKategori({idKategori: id, nama})
-            if (!response.success) throw new Error(response.message);
-            await fetchData();
-            setKategoriDipilih(null);
-            toast.success(response.message);
-        } catch(e: any){
-            toast.error(e.message);
-        } finally {
-            setLoadingFetch(false);
-        }
-    };
-
-    const handleDelete = (id: string) => {
-        // todo: call delete API, then fetchData()
-        setKategoriDipilih(null);
+    const handleDelete = () => {
+        if (!selectedKategori?.id) return;
+        confirmDialog.show({
+            title: 'Hapus Kategori?',
+            description: 'Tindakan ini tidak bisa dibatalkan.',
+            confirmText: 'Hapus',
+            cancelText: 'Batal',
+            onConfirm: () => {
+                handler_deleteKategori(
+                    {
+                        toaster: toast,
+                        whenSuccess: () => {
+                            setSelectedKategori(null);
+                            fetchData();
+                        },
+                    },
+                    selectedKategori.id
+                );
+            },
+        });
     };
 
     return (
         <>
-            <DialogEditKategori
-                isOpen={kategoriDipilih !== null}
-                isLoading={loadingFetch}
-                kategori={kategoriDipilih}
-                onClose={handleCloseDialog}
-                onSubmit={handleUpdateKategori}
-                onDelete={handleDelete}
+            {/* Edit Dialog */}
+            <FormDialog
+                isOpen={editDialog.isOpen}
+                title="Edit Kategori"
+                description="Ubah nama kategori sesuai kebutuhan"
+                fields={fieldUpdateKategori}
+                initialData={selectedKategori || undefined}
+                submitLabel="Simpan Perubahan"
+                cancelLabel="Batal"
+                onCancel={editDialog.close}
+                onSubmit={(data) => handleUpdate({nama: data.nama})}
+                extraButtons={[
+                    {
+                        label: 'Hapus',
+                        variant: 'danger',
+                        onClick: handleDelete,
+                    },
+                ]}
             />
 
-            <DialogTambahKategori
-                isOpen={isOpenTambahKategori}
-                isLoading={loadingFetch}
-                onClose={() => setIsOpenTambahKategori(false)}
-                onSubmit={handleAddKategori}
+            {/* Tambah Dialog */}
+            <FormDialog
+                isOpen={tambahDialog.isOpen}
+                title="Tambah Kategori Baru"
+                description="Isi formulir di bawah untuk menambahkan kategori produk."
+                fields={fieldTambahKategori}
+                initialData={{}}
+                submitLabel="Tambah"
+                cancelLabel="Batal"
+                onCancel={tambahDialog.close}
+                onSubmit={(data) => handleCreate({nama: data.nama, jenis: data.jenis})}
             />
+
+            {/* Main Content */}
             <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
-                <div className='max-w-[1080px] mx-auto md:mx-0'>
-                    <HeaderKategori onTambahKategoriClick={() => setIsOpenTambahKategori(true)} />
+                <div className="max-w-[1080px] mx-auto md:mx-0">
+                    <HeaderKategori onTambahKategoriClick={tambahDialog.open} />
                     <section className="grid grid-cols-1 gap-6 mt-6">
                         <ListKategori
-                            loading={loadingFetch}
+                            loading={loading}
                             kategoriList={kategoriList}
                             totalPages={totalPages}
                             filterJenis={filterJenis}
@@ -126,7 +177,7 @@ export default function KategoriPage() {
                             setSize={setSize}
                             page={page}
                             setPage={setPage}
-                            onPilihKategori={handlePilihKategori}
+                            onPilihKategori={handleEditClick}
                         />
                     </section>
                 </div>

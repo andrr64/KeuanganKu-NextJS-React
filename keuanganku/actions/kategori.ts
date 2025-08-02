@@ -2,6 +2,7 @@ import { API_ROUTES } from "@/lib/api";
 import { fetcher } from "@/lib/fetcher";
 import { KategoriResponse } from "@/types/kategori";
 import { deprecate } from "util";
+
 export type GetFilteredKategoriParams = {
     page?: number
     size?: number

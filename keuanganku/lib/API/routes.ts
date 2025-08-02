@@ -35,6 +35,7 @@ export const API_ROUTES = {
     GET_PENGELUARAN: kategori_route('1'),
     GET_PEMASUKAN: kategori_route('2'),
     UPDATE: (id: string) => kategori_route(id),
+    DELETE: (id?: string) => kategori_route(id)
   },
 
   TRANSAKSI: {

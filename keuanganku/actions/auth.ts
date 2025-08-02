@@ -5,6 +5,7 @@ export async function login(email: string, password: string) {
   return fetcher(API_ROUTES.AUTH.LOGIN, {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+      credentials: 'include' // ini wajib
   });
 }
 
