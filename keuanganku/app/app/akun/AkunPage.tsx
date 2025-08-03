@@ -7,7 +7,6 @@ import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { useDialog } from '@/hooks/dialog';
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
-import { TransaksiModel } from '@/models/Transaksi';
 import { getRingkasan, RingkasanKategoriItem, RingkasanKategoriResponse } from '@/actions/transaksi';
 import { getColors } from '@/lib/utils';
 import { confirmDialog } from '@/lib/confirm-dialog';
@@ -34,9 +33,10 @@ import DialogEditTransaksi from '@/components/dialog/transaksi/DialogEditTransak
 import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
 import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
 import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
-import { AkunModel } from '@/models/Akun';
 import { title } from 'process';
 import { handler_HapusAkun } from '@/actions/handler/transaksi';
+import { AkunModel } from '@/types/model/akun';
+import { TransaksiModel } from '@/types/model/Transaksi';
 
 // Tipe tambahan
 type RingkasanKategoriItemWithColor = RingkasanKategoriItem & { warna: string };
@@ -375,12 +375,7 @@ export default function AkunPage() {
               setEditingAccount(akun);
               editAccountDialog.open();
             }}
-            onHapus={(id) => {
-              const akun = accountList.find((a) => a.id === id);
-              if (akun) {
-                handleDeleteAccount(akun)
-              }
-            }}
+            onHapus={handleDeleteAccount}
           />
 
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -18,15 +18,8 @@ import {
 } from '@/actions/dashboard';
 import {
   getAllAkun,
-  tambahAkun,
-  editAkun,
-  hapusAkun
 } from '@/actions/akun';
-import { getFilteredGoal, GetGoalResponse, tambahGoal } from '@/actions/goal';
 import { handleApiAction } from '@/lib/api';
-import { TransaksiResponse } from '@/types/transaksi';
-import { AkunResponse } from '@/types/akun';
-import { GoalResponse } from '@/types/goal';
 
 // Komponen
 import HeaderDashboard from './components/Header';
@@ -38,38 +31,43 @@ import DialogEditTransaksi from '@/components/dialog/transaksi/DialogEditTransak
 import DialogTambahGoal from '@/components/dialog/goal/DialogTambahGoal';
 import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKategori';
 import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
-import ConfirmDialog from '@/components/dialog/DialogKonfirmasi';
 import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
 import RingkasanGoalSection from './components/RingkasanGoal';
 import KategoriStatistikSection from './components/KategoriStatistikSection';
 import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
+import { confirmDialog } from '@/lib/confirm-dialog';
+import { handler_DeleteAkun } from '@/actions/v2/handlers/akun';
+import { handler_GetGoal, handler_PostGoal } from '@/actions/v2/handlers/goal';
+import { PostGoalParams } from '@/actions/goal';
+import { useDialog } from '@/hooks/dialog';
+import { handler_GetRecentTransaksi } from '@/actions/v2/handlers/transaksi';
+import { TransaksiModel } from '@/types/model/Transaksi';
+import { AkunModel } from '@/types/model/akun';
+import { GoalModel } from '@/types/model/Goal';
+import { handler_GetStatistik_ringkasan } from '@/actions/v2/handlers/statistik';
 
 export default function DashboardPage() {
-  const [selectedTrx, setSelectedTrx] = useState<TransaksiResponse | null>(null);
-  const [dialogEditTrx, setDialogEditTrx] = useState(false);
-  const [dialogHapusTrx, setDialogHapusTrx] = useState(false);
+  const [selectedTrx, setSelectedTrx] = useState<TransaksiModel | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [listAkun, setListAkun] = useState<AkunResponse[]>([]);
-  const [recentTransaksi, setRecentTransaksi] = useState<TransaksiResponse[]>([]);
+  const [listAkun, setListAkun] = useState<AkunModel[]>([]);
+  const [recentTransaksi, setRecentTransaksi] = useState<TransaksiModel[]>([]);
   const [statistikRingkas, setStatistikRingkas] = useState<RingkasanBulanIniResponse | null>(null);
-  const [recentGoal, setGoalList] = useState<GoalResponse[]>([]);
+  const [recentGoal, setGoalList] = useState<GoalModel[]>([]);
 
-  const [isOpenTambahGoal, setIsOpenTambahGoal] = useState(false);
-  const [isOpenTambahKategori, setIsOpenTambahKategori] = useState(false);
-  const [isOpenTambahTransaksi, setIsOpenTambahTransaksi] = useState(false);
-  const [isOpenTambahAkun, setIsOpenTambahAkun] = useState(false);
-  const [isOpenEditAkun, setIsOpenEditAkun] = useState(false);
+  const dialogEditAkun = useDialog();
+  const dialogEditTransaksi = useDialog();
 
-  const [akunYangDiedit, setAkunYangDiedit] = useState<AkunResponse | null>(null);
-  const [akunYangDihapus, setAkunYangDihapus] = useState<AkunResponse | null>(null);
-  const [dialogKonfirmasiHapusAkun, setDialogKonfirmasiHapusAkun] = useState(false);
+  const dialogTambahAkun = useDialog();
+  const dialogTambahTransaksi = useDialog();
+  const dialogTambahGoal = useDialog();
+  const dialogTambahKategori = useDialog();
 
-  const [dataStatistik, setDataStatistik] = useState<KategoriStatistik[]>([]);
+  const [akunYangDiedit, setAkunYangDiedit] = useState<AkunModel | null>(null);
 
   const fetchAkun = () => {
     setLoading(true);
-    handleApiAction<AkunResponse[]>({
+    handleApiAction<AkunModel[]>({
       action: getAllAkun,
       onSuccess: setListAkun,
       onFinally: () => setLoading(false),
@@ -77,33 +75,32 @@ export default function DashboardPage() {
   };
 
   const fetchGoal = () => {
-    handleApiAction<GetGoalResponse>({
-      action: () => getFilteredGoal({ page: 0, size: 5, tercapai: false }),
-      onSuccess: (data) => setGoalList(data.content),
-    });
+    handler_GetGoal(
+      {
+        whenSuccess: (data) => {
+          setGoalList(data.content)
+        }
+      },
+      { page: 0, size: 10, tercapai: false }
+    )
   };
 
   const fetchRecentTransaksi = () => {
-    handleApiAction<TransaksiResponse[]>({
-      action: ambilRecentTransaksi,
-      onSuccess: setRecentTransaksi,
-    });
+    handler_GetRecentTransaksi(
+      {
+        whenSuccess: (data) => {
+          setRecentTransaksi(data)
+        }
+      }
+    )
   };
 
   const fetchDataRingkasanBulanIni = () => {
-    handleApiAction<RingkasanBulanIniResponse>({
-      action: getRecentDashboard,
-      onSuccess: setStatistikRingkas,
-    });
-  };
-
-  const fetchStatistikKategoriPengeluaran = async () => {
-    // setLoading(true);
-    // handleApiAction({
-    //   action: () => getKategoriPengeluaranStatistik(),
-    //   onSuccess: setDataStatistik,
-    //   onFinally: () => setLoading(false),
-    // });
+    handler_GetStatistik_ringkasan(
+      {
+        whenSuccess: (data) => setStatistikRingkas(data)
+      }
+    )
   };
 
   const fetchData = () => {
@@ -111,83 +108,55 @@ export default function DashboardPage() {
     fetchGoal();
     fetchRecentTransaksi();
     fetchDataRingkasanBulanIni();
-    fetchStatistikKategoriPengeluaran();
   };
 
-  const handleTambahAkun = async (data: { nama: string; saldoAwal: number }) => {
-    if (!data.nama.trim()) return toast.error('Nama akun tidak boleh kosong.');
-    if (data.saldoAwal < 0) return toast.error('Saldo awal tidak boleh negatif.');
-
-    await handleApiAction({
-      action: () => tambahAkun(data.nama.trim(), data.saldoAwal),
-      successMessage: 'Akun berhasil ditambahkan',
-      onSuccess: fetchData,
-      onFinally: () => setIsOpenTambahAkun(false),
-    });
-  };
-
-  const handleEditNamaAkun = async (id: string, namaBaru: string) => {
-    if (!namaBaru.trim()) return toast.error('Nama akun tidak boleh kosong.');
-
-    await handleApiAction({
-      action: () => editAkun(id, namaBaru),
-      successMessage: 'Nama akun berhasil diubah',
-      onSuccess: fetchData,
-      onFinally: () => setIsOpenEditAkun(false),
-    });
-  };
-
-  const handleHapusAkun = async (id: string) => {
-    await handleApiAction({
-      action: () => hapusAkun(id),
-      successMessage: 'Akun berhasil dihapus',
-      onSuccess: fetchData,
-    });
-  };
-
-  const handleTambahTransaksi = async (data: TambahTransaksiParams) => {
-    setLoading(true);
-    try {
-      const response = await tambahTransaksi(data);
-      if (!response.success) throw new Error(response.message);
-
-      toast.success("Transaksi berhasil ditambahkan");
-      setIsOpenTambahTransaksi(false);
-      fetchData();
-    } catch (e: any) {
-      toast.error(`Error: ${e.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditTransaksi = async (data: EditTransaksiParams) => {
-    console.log(data);
-    setLoading(true);
-    await handleApiAction({
-      action: () => updateTransaksi(data),
-      successMessage: 'Transaksi berhasil diperbarui',
-      onSuccess: fetchData,
-      onFinally: () => {
-        setDialogEditTrx(false);
-        setSelectedTrx(null);
-        setLoading(false);
-      },
-    });
-  };
-  const handleTambahGoal = (nama: string, target: number, tanggalTarget: string) => {
-    setLoading(true)
-    handleApiAction({
-      action: () => tambahGoal({ nama, target, tanggalTarget }),
-      successMessage: 'Goal berhasil ditambahkan',
-      onSuccess: () => {
-        setIsOpenTambahGoal(false)
-        fetchData()
-      },
-      onFinally: () => setLoading(false),
-    })
+  const handleHapusAkun = (akun: AkunModel) => {
+    confirmDialog.show(
+      {
+        title: "Hapus Akun",
+        description: "Anda yakin? SEMUA DATA TRANSAKSI AKAN DIHAPUS DAN data tidak dapat dikembalikan!",
+        confirmText: "Ya, hapus",
+        onConfirm: () => {
+          handler_DeleteAkun(
+            {
+              setLoading,
+              toaster: toast,
+              whenSuccess: () => fetchData()
+            },
+            akun.id
+          )
+        }
+      }
+    )
   }
 
+  const handleHapusTransaksi = (trx: TransaksiModel) => {
+    confirmDialog.show(
+      {
+        title: "Hapus data",
+        description: "Anda yakin? transaksi tidak dapat dihapus!",
+        onConfirm: () => {
+
+        }
+      }
+    )
+  }
+
+  const handleTambahGoal = (nama: string, target: number, tanggalTarget: string) => {
+    const body: PostGoalParams = { nama, target, tanggalTarget }
+
+    handler_PostGoal(
+      {
+        setLoading,
+        toaster: toast,
+        whenSuccess: () => {
+          dialogTambahGoal.open()
+          fetchData()
+        }
+      },
+      body
+    )
+  }
 
   useEffect(() => {
     fetchData();
@@ -197,28 +166,21 @@ export default function DashboardPage() {
     <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
       <div className="max-w-[1280px] mx-auto flex flex-col gap-8">
         <HeaderDashboard
-          onTambahAkun={() => setIsOpenTambahAkun(true)}
-          onTambahTransaksi={() => setIsOpenTambahTransaksi(true)}
-          onTambahGoal={() => setIsOpenTambahGoal(true)}
-          onTambahKategori={() => setIsOpenTambahKategori(true)}
+          onTambahAkun={dialogTambahAkun.open}
+          onTambahTransaksi={dialogTambahTransaksi.open}
+          onTambahGoal={dialogTambahGoal.open}
+          onTambahKategori={dialogTambahKategori.open}
           onRefresh={fetchData}
         />
-
         <section>
           <h2 className="text-lg md:text-xl font-semibold mb-3">Daftar Akun</h2>
           <ListAkunSection
             listAkun={listAkun}
             onEdit={(akun) => {
               setAkunYangDiedit(akun);
-              setIsOpenEditAkun(true);
+              dialogEditAkun.close()
             }}
-            onHapus={(id) => {
-              const akun = listAkun.find(a => a.id === id);
-              if (akun) {
-                setAkunYangDihapus(akun);
-                setDialogKonfirmasiHapusAkun(true);
-              }
-            }}
+            onHapus={handleHapusAkun}
           />
         </section>
 
@@ -234,110 +196,74 @@ export default function DashboardPage() {
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <CashflowChartSection />
-          <KategoriStatistikSection data={dataStatistik} />
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <RingkasanGoalSection goals={recentGoal} />
           <TransaksiTerakhirSection
             data={recentTransaksi}
             loading={loading}
             onClickTrx={(trx) => {
               setSelectedTrx(trx);
-              setDialogEditTrx(true);
+              dialogEditTransaksi.close()
             }}
-            onDelete={(trx) => {
-              setSelectedTrx(trx);
-              setDialogHapusTrx(true);
-            }}
+            onDelete={handleHapusTransaksi}
           />
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <RingkasanGoalSection goals={recentGoal} />
         </section>
       </div>
 
       {/* Dialog Tambah */}
       <DialogTambahTransaksi
-        isOpen={isOpenTambahTransaksi}
+        isOpen={dialogTambahTransaksi.isOpen}
         akunOptions={listAkun}
-        closeDialog={() => setIsOpenTambahTransaksi(false)} 
+        closeDialog={() => dialogTambahTransaksi.close}
         whenSuccess={() => {
-          setIsOpenTambahTransaksi(false);
+          dialogTambahTransaksi.open()
           fetchData()
-        }}/>
+        }} />
       <DialogTambahGoal
-        isOpen={isOpenTambahGoal}
-        onClose={() => setIsOpenTambahGoal(false)}
+        isOpen={dialogTambahGoal.isOpen}
+        onClose={dialogTambahGoal.close}
         onSubmit={(nama, target, tanggalTarget) => {
+          dialogTambahGoal.close()
           handleTambahGoal(nama, target, tanggalTarget);
           fetchData();
         }}
       />
       <DialogTambahKategori
-        isOpen={isOpenTambahKategori}
+        isOpen={dialogTambahKategori.isOpen}
         isLoading={false}
-        onClose={() => setIsOpenTambahKategori(false)}
+        onClose={dialogTambahKategori.close}
       />
       <DialogTambahAkun
-        isOpen={isOpenTambahAkun}
+        isOpen={dialogTambahAkun.isOpen}
         isLoading={false}
-        onClose={() => setIsOpenTambahAkun(false)}
-        onSubmit={handleTambahAkun}
+        closeDialog={dialogTambahAkun.close}
+        whenSuccess={fetchAkun}
       />
       <DialogEditAkun
-        isOpen={isOpenEditAkun}
-        isLoading={false}
+        isOpen={dialogEditAkun.isOpen}
         akun={akunYangDiedit}
-        onClose={() => {
-          setIsOpenEditAkun(false);
-          setAkunYangDiedit(null);
+        closeDialog={() => {
+          dialogEditAkun.close()
+          setAkunYangDiedit(null)
         }}
-        onSubmit={(id, namaBaru) => {
-          handleEditNamaAkun(id, namaBaru);
+        whenSuccess={() => {
+          fetchAkun()
         }}
       />
 
       {/* Dialog Edit & Hapus Transaksi */}
       <DialogEditTransaksi
-        isOpen={dialogEditTrx}
+        isOpen={dialogEditTransaksi.isOpen}
         isLoading={false}
         transaksiData={selectedTrx}
         akunOptions={listAkun}
-        closeDialog={() => {
-          setDialogEditTrx(false);
-        }}
+        closeDialog={dialogEditTransaksi.close}
         whenSuccess={() => {
-          setSelectedTrx(null);
+          dialogEditTransaksi.close()
+          setSelectedTrx(null)
           fetchData()
-        }}
-      />
-      <ConfirmDialog
-        isOpen={dialogHapusTrx}
-        onClose={() => {
-          setDialogHapusTrx(false);
-          setSelectedTrx(null);
-        }}
-        title="Hapus transaksi"
-        description="Data yang dihapus tidak dapat dikembalikan!"
-        confirmText="Ya, hapus"
-        onConfirm={() => {
-          console.log("Transaksi dihapus:", selectedTrx);
-          setDialogHapusTrx(false);
-          fetchData();
-        }}
-      />
-      <ConfirmDialog
-        isOpen={dialogKonfirmasiHapusAkun}
-        onClose={() => {
-          setDialogKonfirmasiHapusAkun(false);
-          setAkunYangDihapus(null);
-        }}
-        title="Hapus Akun"
-        description={`Akun "${akunYangDihapus?.nama}" akan dihapus beserta seluruh transaksi terkait. Lanjutkan?`}
-        confirmText="Ya, hapus akun"
-        onConfirm={async () => {
-          if (!akunYangDihapus) return;
-          await handleHapusAkun(akunYangDihapus.id);
-          setDialogKonfirmasiHapusAkun(false);
-          setAkunYangDihapus(null);
         }}
       />
     </main>

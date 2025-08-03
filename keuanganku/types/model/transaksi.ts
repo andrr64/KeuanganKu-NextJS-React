@@ -1,11 +1,11 @@
-import { KategoriModel } from "./kategori";
+import { KategoriModel } from "./Kategori";
 
 export interface TransaksiModel {
     id: string;
     idAkun: string;
     namaKategori: string;
     namaAkun: string;
-    jenisTransaksi: number; // 1 untuk penngeluaran, 2 untuk pemasukan
+    jenisTransaksi: number; 
     jumlah: number;
     catatan: string;
     tanggal: string;

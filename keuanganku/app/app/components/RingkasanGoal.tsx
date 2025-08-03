@@ -46,7 +46,7 @@ export default function RingkasanGoalSection({
     <section className="space-y-4">
       <h2 className="text-lg md:text-xl font-semibold mb-2 text-gray-700 dark:text-white flex items-center gap-2">
         <FaBullseye className="text-indigo-600" />
-        Ringkasan Goal Keuangan
+        Goal
       </h2>
 
       {isKosong ? (

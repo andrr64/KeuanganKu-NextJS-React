@@ -3,8 +3,14 @@ export interface TransaksiDariKategori {
     value: number;
 }
 
-export type StatistikTransaksiTiapKategoriResponse = {
+export type StatistikTransaksiTiapKategori = {
     pengeluaran: TransaksiDariKategori[];
     pemasukan: TransaksiDariKategori[];
 }
 
+export type StatistikRingkasanBulanIni = {
+    totalSaldo: number;
+    totalPemasukanBulanIni: number;
+    totalPengeluaranBulanIni: number;
+    cashflowBulanIni: number;
+}

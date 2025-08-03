@@ -2,8 +2,8 @@ import { apiRequester, handleApiResponse } from "@/lib/API/v2/requester";
 import { HandlerParams } from "./base";
 import { GetGoal, PutGoal, PostGoal, PostKurangiUangGoal } from "@/types/request/goal";
 import { API_ROUTES } from "@/lib/API/v2/routes";
-import { GoalModel } from "@/models/Goal";
 import { Pageable } from "@/types/response/pageable";
+import { GoalModel } from "@/types/model/Goal";
 
 export const handler_PostGoal = async (params: HandlerParams, body: PostGoal) => {
     await handleApiResponse(

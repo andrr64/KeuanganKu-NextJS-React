@@ -12,7 +12,7 @@ export default function DialogTambahAkun({
     isOpen: boolean;
     isLoading: boolean;
     closeDialog: () => void;
-    whenSuccess : () => void;
+    whenSuccess: () => void;
 }) {
     const fields = [
         {
@@ -42,12 +42,15 @@ export default function DialogTambahAkun({
             return alert('Saldo awal harus berupa angka non-negatif.');
         }
 
-        await handler_PostAkun (
+        await handler_PostAkun(
             {
                 toaster: toast,
-                whenSuccess
+                whenSuccess: () => {
+                    whenSuccess()
+                    closeDialog()
+                }
             },
-            {nama, saldoAwal}
+            { nama, saldoAwal }
         )
     };
 

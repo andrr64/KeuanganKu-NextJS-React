@@ -1,10 +1,11 @@
 import { AkunResponse } from "@/types/akun";
-import { FaEdit, FaEye, FaTrash, FaWallet } from "react-icons/fa";
+import { AkunModel } from "@/types/model/akun";
+import { FaEdit, FaTrash, FaWallet } from "react-icons/fa";
 
 type Props = {
     listAkun: AkunResponse[];
-    onEdit: (akun: AkunResponse) => void;
-    onHapus: (id: string) => void;
+    onEdit: (akun: AkunModel) => void;
+    onHapus: (akun: AkunModel) => void;
 };
 
 export default function ListAkunSection({ listAkun, onEdit, onHapus }: Props) {
@@ -47,7 +48,7 @@ export default function ListAkunSection({ listAkun, onEdit, onHapus }: Props) {
                             className="w-8 h-8 flex items-center justify-center rounded-full 
               bg-rose-100 hover:bg-rose-200 text-rose-700 
               dark:bg-rose-900 dark:hover:bg-rose-800 dark:text-rose-300 transition"
-                            onClick={() => onHapus(akun.id)}
+                            onClick={() => onHapus(akun)}
                         >
                             <FaTrash className="w-4 h-4" />
                         </button>

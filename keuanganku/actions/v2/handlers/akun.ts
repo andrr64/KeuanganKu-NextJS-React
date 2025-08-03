@@ -2,7 +2,6 @@ import { PostAKunBody as PostAkunBody, PutAkunBody } from "@/types/request/akun"
 import { HandlerParams } from "./base";
 import { apiRequester, handleApiResponse } from "@/lib/API/v2/requester";
 import { API_ROUTES } from "@/lib/API/v2/routes";
-import { Pageable } from "@/types/response/pageable";
 import { AkunModel } from "@/models/Akun";
 
 export const handler_PostAkun = async (
@@ -47,6 +46,21 @@ export const handler_PatchAkun_nama = async (
             {
                 method: "PATCH",
                 body: JSON.stringify({nama})
+            }
+        ),
+        actions
+    )
+}
+
+export const handler_DeleteAkun = async (
+    actions: HandlerParams,
+    id: string 
+) => {
+    await handleApiResponse (
+        apiRequester(
+            API_ROUTES.AKUN.DELETE(id),
+            {
+                method: "DELETE"
             }
         ),
         actions
