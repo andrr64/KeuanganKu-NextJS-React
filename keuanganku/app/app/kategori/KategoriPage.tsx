@@ -18,6 +18,8 @@ import {
     fieldUpdateKategori
 } from '@/components/fields/form_kategori';
 import { confirmDialog } from '@/lib/confirm-dialog';
+import DialogEditKategori from '@/components/dialog/kategori/DialogEditKategori';
+import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKategori';
 
 export default function KategoriPage() {
     const [kategoriList, setKategoriList] = useState<KategoriResponse[]>([]);
@@ -26,8 +28,8 @@ export default function KategoriPage() {
     const [selectedKategori, setSelectedKategori] = useState<KategoriResponse | null>(null);
 
     // Dialog controllers
-    const editDialog = useDialog();
-    const tambahDialog = useDialog();
+    const dialogEditKategori = useDialog();
+    const dialogTambahKategori = useDialog();
 
     // Filters & pagination
     const [filterJenis, setFilterJenis] = useState<0 | 1 | 2>(0);
@@ -71,7 +73,7 @@ export default function KategoriPage() {
      */
     const handleEditClick = (kategori: KategoriResponse) => {
         setSelectedKategori(kategori);
-        editDialog.open();
+        dialogEditKategori.open();
     };
 
     const handleUpdate = (data: { nama: string }) => {
@@ -81,7 +83,7 @@ export default function KategoriPage() {
                 toaster: toast,
                 whenSuccess: () => {
                     toast.success('Kategori diperbarui');
-                    editDialog.close();
+                    dialogEditKategori.close();
                     fetchData();
                 },
             },
@@ -95,7 +97,7 @@ export default function KategoriPage() {
                 toaster: toast,
                 whenSuccess: () => {
                     toast.success('Kategori ditambahkan');
-                    tambahDialog.close();
+                    dialogTambahKategori.close();
                     fetchData();
                 },
             },
@@ -128,42 +130,25 @@ export default function KategoriPage() {
     return (
         <>
             {/* Edit Dialog */}
-            <FormDialog
-                isOpen={editDialog.isOpen}
-                title="Edit Kategori"
-                description="Ubah nama kategori sesuai kebutuhan"
-                fields={fieldUpdateKategori}
-                initialData={selectedKategori || undefined}
-                submitLabel="Simpan Perubahan"
-                cancelLabel="Batal"
-                onCancel={editDialog.close}
-                onSubmit={(data) => handleUpdate({nama: data.nama})}
-                extraButtons={[
-                    {
-                        label: 'Hapus',
-                        variant: 'danger',
-                        onClick: handleDelete,
-                    },
-                ]}
+            <DialogEditKategori
+                isOpen={dialogEditKategori.isOpen}
+                kategori={selectedKategori}
+                onClose={dialogEditKategori.close}
+                whenSuccess={() => {
+                    setSelectedKategori(null)
+                    fetchData()
+                }}
             />
 
-            {/* Tambah Dialog */}
-            <FormDialog
-                isOpen={tambahDialog.isOpen}
-                title="Tambah Kategori Baru"
-                description="Isi formulir di bawah untuk menambahkan kategori produk."
-                fields={fieldTambahKategori}
-                initialData={{}}
-                submitLabel="Tambah"
-                cancelLabel="Batal"
-                onCancel={tambahDialog.close}
-                onSubmit={(data) => handleCreate({nama: data.nama, jenis: data.jenis})}
+            <DialogTambahKategori 
+                isOpen={dialogTambahKategori.isOpen} 
+                onClose={dialogTambahKategori.close}
+                whenSuccess={fetchData}
             />
 
-            {/* Main Content */}
             <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
                 <div className="max-w-[1080px] mx-auto md:mx-0">
-                    <HeaderKategori onTambahKategoriClick={tambahDialog.open} />
+                    <HeaderKategori onTambahKategoriClick={dialogTambahKategori.open} />
                     <section className="grid grid-cols-1 gap-6 mt-6">
                         <ListKategori
                             loading={loading}
