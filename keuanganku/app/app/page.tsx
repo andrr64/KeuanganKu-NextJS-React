@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import DashboardPage from "./DashboardPage";
+import DashboardPage from "./MainPage";
 
 export const metadata: Metadata = {
   title: 'Dashboard | KeuanganKu',

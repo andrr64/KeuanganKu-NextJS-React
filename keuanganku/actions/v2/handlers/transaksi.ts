@@ -27,7 +27,7 @@ export const handler_GetTransaksi = async (
     )
 }
 
-export const handler_GetRecentTransaksi = async (
+export const handler_GetTransaksi_terbaru = async (
     actions: HandlerParams<TransaksiModel[]>
 ) => {
     await handleApiResponse(
