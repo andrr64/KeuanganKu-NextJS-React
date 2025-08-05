@@ -3,37 +3,36 @@
 import { useEffect, useState } from 'react';
 import FormDialog, { FieldConfig } from '@/components/FormDialog';
 import { GoalResponse } from '@/types/goal';
+import { getDateFromISO, getNowDateISOString, getPresetTargetDate } from '@/lib/timeutil';
+import { GoalModel } from '@/types/model/Goal';
+import { PutGoal } from '@/types/request/goal';
+import { handler_PutGoal } from '@/actions/v2/handlers/goal';
+import toast from 'react-hot-toast';
+import { useDialog } from '@/hooks/dialog';
 
 type Props = {
   isOpen: boolean;
   data: GoalResponse | null;
   onClose: () => void;
-  onSubmit: (id: string, nama: string, target: number, tanggalTarget: string) => void | Promise<void>;
+  whenSuccess: () => void;
 };
 
-export default function DialogEditGoal({ isOpen, data, onClose, onSubmit }: Props) {
-  const [loading, setLoading] = useState(false);
-
-  // Konversi format tanggal dari DD/MM/YYYY ke YYYY-MM-DD
-  const formatDateInput = (dateStr: string): string => {
-    const [day, month, year] = dateStr.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
-  // State untuk form
+export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: Props) {
   const [formData, setFormData] = useState({
     nama: '',
     target: '',
-    tanggalTarget: '',
+    tanggalTarget: '', // format: YYYY-MM-DD
   });
 
-  // Sync data saat dialog dibuka
+  const loading = useDialog()
+  
+  // Reset form saat dialog dibuka
   useEffect(() => {
     if (isOpen && data) {
       setFormData({
         nama: data.nama,
         target: data.target.toString(),
-        tanggalTarget: formatDateInput(data.tanggalTarget),
+        tanggalTarget: getDateFromISO(data.tanggalTarget),
       });
     } else {
       setFormData({ nama: '', target: '', tanggalTarget: '' });
@@ -58,7 +57,7 @@ export default function DialogEditGoal({ isOpen, data, onClose, onSubmit }: Prop
     {
       name: 'tanggalTarget',
       label: 'Tanggal Target',
-      type: 'date',
+      type: 'date', // ✅ Hanya tanggal
       required: true,
     },
   ];
@@ -68,17 +67,44 @@ export default function DialogEditGoal({ isOpen, data, onClose, onSubmit }: Prop
 
     if (!data?.id) return;
 
-    const [year, month, day] = tanggalTarget.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
+    if (!nama?.trim()) {
+      return alert('Nama goal wajib diisi.');
+    }
+    if (!target || isNaN(Number(target)) || Number(target) <= 0) {
+      return alert('Target harus berupa angka positif.');
+    }
+    if (!tanggalTarget) {
+      return alert('Tanggal target wajib dipilih.');
+    }
 
-    setLoading(true);
-    try {
-      await onSubmit(data.id, nama.trim(), parseFloat(target), formattedDate);
-      onClose(); // Tutup setelah sukses
-    } catch (error) {
-      console.error('Gagal memperbarui goal:', error);
-    } finally {
-      setLoading(false);
+    const newData: PutGoal = {
+      id: data.id,
+      nama,
+      target,
+      tanggalTarget,
+    }
+
+    console.log("Data yang dikirimkan: " + newData);
+    
+    handler_PutGoal(
+      {
+        toaster: toast,
+        whenSuccess: () => {
+          onClose()
+          whenSuccess()
+        }
+      },
+      newData
+    )
+  };
+
+  const handlePresetDate = (monthIndex: number) => {
+    if (monthIndex == 1) {
+      const bulanSekarang = getNowDateISOString().split("-")[1];
+      setFormData((prev) => ({ ...prev, tanggalTarget: getPresetTargetDate(Number(bulanSekarang)) }));
+    } else {
+      const presetDate = getPresetTargetDate(monthIndex);
+      setFormData((prev) => ({ ...prev, tanggalTarget: presetDate }));
     }
   };
 
@@ -91,8 +117,23 @@ export default function DialogEditGoal({ isOpen, data, onClose, onSubmit }: Prop
       initialData={formData}
       onCancel={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+      submitLabel="Simpan Perubahan"
       cancelLabel="Batal"
+      extraButtons={[
+        {
+          label: 'Bulan Depan',
+          variant: 'secondary',
+          onClick: () => handlePresetDate(1),
+        },
+        {
+          label: 'Tahun Depan',
+          variant: 'secondary',
+          onClick: () => handlePresetDate(12),
+        },
+      ]}
+      onChange={(name, value) => {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }}
     />
   );
 }

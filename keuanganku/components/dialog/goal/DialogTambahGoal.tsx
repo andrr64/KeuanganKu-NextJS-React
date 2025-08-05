@@ -1,60 +1,93 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import FormDialog, { FieldConfig } from '../../FormDialog';
+import { handler_PostGoal } from '@/actions/v2/handlers/goal';
+import toast from 'react-hot-toast';
+import { getNowDateISOString, getPresetTargetDate } from '@/lib/timeutil';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (nama: string, target: number, tanggalTarget: string) => void | Promise<void>;
+  whenSuccess: () => void;
 };
 
-export default function DialogTambahGoal({ isOpen, onClose, onSubmit }: Props) {
-  const [loading, setLoading] = useState(false);
+export default function DialogTambahGoal({ isOpen, onClose, whenSuccess }: Props) {
+  const fields: FieldConfig[] = [
+    {
+      name: 'nama',
+      label: 'Nama Goal',
+      type: 'text',
+      required: true,
+      placeholder: 'Contoh: Tabungan Rumah',
+    },
+    {
+      name: 'target',
+      label: 'Target (Rp)',
+      type: 'number',
+      required: true,
+      placeholder: 'Contoh: 50000000',
+    },
+    {
+      name: 'tanggalTarget',
+      label: 'Tanggal',
+      type: 'date',
+      required: true
+    },
+  ];
 
-  const fields: FieldConfig[] = useMemo(
-    () => [
+  const [formData, setFormData] = useState({
+    nama: '',
+    target: '',
+    tanggalTarget: getNowDateISOString(),
+  });
+
+  useEffect(() => {
+    setFormData(
       {
-        name: 'nama',
-        label: 'Nama Goal',
-        type: 'text',
-        required: true,
-        placeholder: 'Contoh: Tabungan Rumah',
-      },
-      {
-        name: 'target',
-        label: 'Target (Rp)',
-        type: 'number',
-        required: true,
-        placeholder: 'Contoh: 50000000',
-      },
-      {
-        name: 'tanggalTarget',
-        label: 'Tanggal Target',
-        type: 'date', // ✅ Gunakan date picker
-        required: true,
-      },
-    ],
-    []
-  );
+        nama: '',
+        target: '',
+        tanggalTarget: getNowDateISOString(),
+      }
+    )
+  }, [isOpen])
 
   const handleSubmit = async (data: Record<string, any>) => {
     const { nama, target, tanggalTarget } = data;
 
-    if (!nama || !target || !tanggalTarget) return;
+    if (!nama?.trim()) {
+      return alert('Nama goal wajib diisi.');
+    }
+    if (!target || isNaN(Number(target)) || Number(target) <= 0) {
+      return alert('Target harus berupa angka positif.');
+    }
+    if (!tanggalTarget) {
+      return alert('Tanggal target wajib dipilih.');
+    }
 
-    // Konversi YYYY-MM-DD → DD/MM/YYYY
-    const [year, month, day] = tanggalTarget.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
+      handler_PostGoal(
+      {
+        toaster: toast,
+        whenSuccess: () => {
+          onClose();
+          whenSuccess();
+        },
+      },
+      {
+        nama: nama.trim(),
+        target: target,
+        tanggalTarget: tanggalTarget,
+      }
+    );
+  };
 
-    setLoading(true);
-    try {
-      await onSubmit(nama.trim(), parseFloat(target), formattedDate);
-      onClose();
-    } catch (error) {
-      console.error('Gagal menambahkan goal:', error);
-    } finally {
-      setLoading(false);
+  const handlePresetDate = (monthIndex: number) => {
+    if (monthIndex == 1) {
+      const bulanSekarang = getNowDateISOString().split("-")[1];
+      setFormData((prev) => ({ ...prev, tanggalTarget: getPresetTargetDate(Number(bulanSekarang)) }));
+    } else {
+      const presetDate = getPresetTargetDate(monthIndex);
+      setFormData((prev) => ({ ...prev, tanggalTarget: presetDate }));
     }
   };
 
@@ -64,45 +97,26 @@ export default function DialogTambahGoal({ isOpen, onClose, onSubmit }: Props) {
       title="Tambah Goal"
       description="Masukkan data goal baru."
       fields={fields}
-      initialData={{ nama: '', target: '', tanggalTarget: '' }} // kosong
+      initialData={formData}
       onCancel={onClose}
       onSubmit={handleSubmit}
-      submitLabel={loading ? 'Menyimpan...' : 'Simpan'}
+      submitLabel="Simpan"
       cancelLabel="Batal"
       extraButtons={[
         {
           label: 'Bulan Depan',
           variant: 'secondary',
-          disabled: loading,
-          onClick: () => {
-            if (loading) return;
-            const nextMonth = new Date();
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            const tanggal = nextMonth.toISOString().split('T')[0]; // YYYY-MM-DD
-            const input = document.querySelector<HTMLInputElement>('input[name="tanggalTarget"]');
-            if (input) {
-              input.value = tanggal;
-              input.dispatchEvent(new Event('input', { bubbles: true })); // trigger React state update
-            }
-          },
+          onClick: () => handlePresetDate(1),
         },
         {
           label: 'Tahun Depan',
           variant: 'secondary',
-          disabled: loading,
-          onClick: () => {
-            if (loading) return;
-            const nextYear = new Date();
-            nextYear.setFullYear(nextYear.getFullYear() + 1);
-            const tanggal = nextYear.toISOString().split('T')[0];
-            const input = document.querySelector<HTMLInputElement>('input[name="tanggalTarget"]');
-            if (input) {
-              input.value = tanggal;
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-          },
+          onClick: () => handlePresetDate(12),
         },
       ]}
+      onChange={(name, value) => {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }}
     />
   );
 }

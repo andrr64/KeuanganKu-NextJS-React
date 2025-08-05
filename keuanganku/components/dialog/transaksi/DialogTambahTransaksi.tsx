@@ -4,10 +4,10 @@ import { Fragment, useEffect, useState } from 'react';
 import FormDialog, { FieldConfig } from '@/components/FormDialog';
 import { KategoriResponse } from '@/types/kategori';
 import toast from 'react-hot-toast';
-import { AkunModel } from '@/models/Akun';
 import { handler_fetchKategori } from '@/actions/v2/handlers/kategori';
 import { handler_PostTransaksi } from '@/actions/v2/handlers/transaksi';
 import { getLocaleDatetimeString } from '@/lib/timeutil';
+import { AkunModel } from '@/types/model/akun';
 
 interface DialogTambahTransaksiProps {
     isOpen: boolean;
@@ -29,7 +29,7 @@ export default function DialogTambahTransaksi({
         jenis: 1 as 1 | 2,
         idKategori: '',
         jumlah: 0,
-        tanggal: new Date().toISOString().slice(0, 16),
+        tanggal: getLocaleDatetimeString(),
         catatan: ''
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +81,6 @@ export default function DialogTambahTransaksi({
         }
     }, [isOpen, akunOptions]);
 
-    // Update kategori saat jenis berubah
     useEffect(() => {
         const currentList = jenis === 1 ? listKategoriPengeluaran : listKategoriPemasukan;
         if (currentList.length > 0) {

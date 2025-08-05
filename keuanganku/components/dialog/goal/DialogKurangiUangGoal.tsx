@@ -1,127 +1,71 @@
-'use client'
+'use client';
 
-import { Fragment, useEffect, useState } from 'react'
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Transition,
-    TransitionChild,
-    Description,
-} from '@headlessui/react'
+import { useEffect, useState } from 'react';
+import FormDialog, { FieldConfig } from '@/components/FormDialog';
+import { handler_PatchSubtractGoalFunds } from '@/actions/v2/handlers/goal';
+import toast from 'react-hot-toast';
+import { GoalModel } from '@/types/model/Goal';
 
 type Props = {
-    isOpen: boolean
-    isLoading: boolean
-    onClose: () => void
-    onSubmit: (jumlah: number) => void
-}
+    isOpen: boolean;
+    goal: GoalModel | null;
+    onClose: () => void;
+    whenSuccess: () => void;
+};
 
-export default function DialogKurangiUangGoal({
-    isOpen,
-    isLoading,
-    onClose,
-    onSubmit,
-}: Props) {
-    const [jumlah, setJumlah] = useState('')
+export default function DialogKurangiUangGoal({ isOpen, goal, onClose, whenSuccess }: Props) {
+    const [formData, setFormData] = useState({
+        jumlah: '',
+    });
 
+    // Reset form saat dialog dibuka
     useEffect(() => {
         if (isOpen) {
-            setJumlah('')   
+            setFormData({ jumlah: '' });
         }
-    }, [isOpen])
+    }, [isOpen]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        const value = parseFloat(jumlah)
-        if (isNaN(value) || value <= 0) return
-        onSubmit(value)
-    }
+    const fields: FieldConfig[] = [
+        {
+            name: 'jumlah',
+            label: 'Jumlah Uang (Rp)',
+            type: 'number',
+            required: true,
+            placeholder: 'Masukkan jumlah uang',
+        },
+    ];
+
+    const handleSubmit = async(data: Record<string, any>) => {
+        const value = parseFloat(data.jumlah);
+        if (isNaN(value) || value <= 0 || !goal) {
+            toast.error('Jumlah harus lebih dari 0.');
+            return;
+        }
+
+        await handler_PatchSubtractGoalFunds(
+            {
+                toaster: toast,
+                whenSuccess,
+            },
+            { id: goal.id, uang: value }
+        );
+    };
 
     return (
-        <Transition appear show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <TransitionChild
-                    as={Fragment}
-                    enter="ease-out duration-200"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-150"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-                </TransitionChild>
-
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <TransitionChild
-                        as={Fragment}
-                        enter="ease-out duration-200"
-                        enterFrom="opacity-0 scale-95"
-                        enterTo="opacity-100 scale-100"
-                        leave="ease-in duration-150"
-                        leaveFrom="opacity-100 scale-100"
-                        leaveTo="opacity-0 scale-95"
-                    >
-                        <DialogPanel className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
-                            <DialogTitle className="text-lg font-medium text-gray-900 dark:text-white">
-                                Kurangi Uang dari Goal
-                            </DialogTitle>
-                            <Description className="text-sm text-gray-500 dark:text-gray-300 mt-2">
-                                Masukkan jumlah uang yang ingin dikurangi dari goal ini.
-                            </Description>
-
-                            <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-                                <div>
-                                    <label
-                                        htmlFor="jumlah"
-                                        className="block text-xs font-medium text-gray-700 dark:text-white mb-1"
-                                    >
-                                        Jumlah Uang (Rp)
-                                    </label>
-                                    <input
-                                        id="jumlah"
-                                        type="number"
-                                        min={1}
-                                        value={jumlah}
-                                        onChange={(e) => setJumlah(e.target.value)}
-                                        className="w-full text-sm px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex justify-end pt-4 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={onClose}
-                                        disabled={isLoading}
-                                        className={`px-4 py-2 rounded 
-                        bg-gray-200 dark:bg-gray-700 
-                        text-gray-700 dark:text-white 
-                        hover:bg-gray-300 dark:hover:bg-gray-600 
-                        transition-colors duration-200 
-                        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        Batal
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className={`px-4 py-2 rounded text-white 
-                        ${isLoading
-                                                ? 'bg-red-400 cursor-not-allowed'
-                                                : 'bg-red-600 hover:bg-red-700'}
-                        transition-colors duration-200`}
-                                    >
-                                        Kurangi
-                                    </button>
-                                </div>
-                            </form>
-                        </DialogPanel>
-                    </TransitionChild>
-                </div>
-            </Dialog>
-        </Transition>
-    )
+        <FormDialog
+            isOpen={isOpen}
+            title="Kurangi Uang dari Goal"
+            description="Masukkan jumlah uang yang ingin dikurangi dari goal ini."
+            fields={fields}
+            initialData={formData}
+            onCancel={onClose}
+            onSubmit={handleSubmit}
+            submitLabel="Kurangi"
+            cancelLabel="Batal"
+            onChange={(name, value) => {
+                setFormData((prev) => ({ ...prev, [name]: value }));
+            }}
+            extraButtons={[]}
+        />
+    );
 }
