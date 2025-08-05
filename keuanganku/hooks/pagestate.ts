@@ -4,6 +4,7 @@ type UsePageStateReturn = {
     loadingStatus: boolean;
     error: string | null;
     setError: (err: string) => void;
+    setLoading: (val: boolean) => void;
     loading: () => void;
     finished: () => void;
     resetError: () => void;
@@ -31,6 +32,9 @@ export const usePageState = (
         },
         resetError: () => {
             setErrorState(null)
+        },
+        setLoading: (val) => {
+            setLoading(val)
         },
         isError: error !== null,
     };
