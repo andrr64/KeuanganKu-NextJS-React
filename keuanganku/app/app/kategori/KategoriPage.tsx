@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import ListKategori from './ListKategori';
-import HeaderKategori from './Header';
+import ListKategori from './components/ListKategori';
+import HeaderKategori from './components/Header';
 import { KategoriResponse } from '@/types/kategori';
 import toast from 'react-hot-toast';
 import {
@@ -12,11 +12,6 @@ import {
     handler_updateKategori
 } from '@/actions/v2/handlers/kategori';
 import { useDialog } from '@/hooks/dialog';
-import FormDialog from '@/components/FormDialog';
-import {
-    fieldTambahKategori,
-    fieldUpdateKategori
-} from '@/components/fields/form_kategori';
 import { confirmDialog } from '@/lib/confirm-dialog';
 import DialogEditKategori from '@/components/dialog/kategori/DialogEditKategori';
 import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKategori';

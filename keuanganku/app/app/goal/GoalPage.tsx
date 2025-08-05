@@ -10,14 +10,14 @@ import DialogTambahGoal from '@/components/dialog/goal/DialogTambahGoal'
 import DialogEditGoal from '@/components/dialog/goal/DialogEditGoal'
 import DialogTambahUangGoal from '@/components/dialog/goal/DialogTambahUangGoal'
 import GoalItem from '../../../components/items/GoalItem'
-import { handleApiAction } from '@/lib/api'
 import DialogKurangiUangGoal from '@/components/dialog/goal/DialogKurangiUangGoal'
-import ConfirmDialog from '@/components/dialog/DialogKonfirmasi'
 import { useDialog } from '@/hooks/dialog'
 import { handler_DeleteGoal, handler_GetGoal, handler_PatchAddGoalFunds, handler_PutGoal, handler_PatchGoalStatus, handler_PatchSubtractGoalFunds, handler_PostGoal } from '@/actions/v2/handlers/goal'
-import { GoalModel } from '@/models/Goal'
-import LoadingP from '@/components/LoadingP'
 import { confirmDialog } from '@/lib/confirm-dialog'
+import { GoalModel } from '@/types/model/Goal'
+import { usePageState } from '@/hooks/pagestate'
+import LoadingP from '@/components/LoadingP'
+import ErrorPage from '@/components/pages/ErrorPage'
 
 const formatRupiah = (val: number) => Intl.NumberFormat('id-ID').format(val)
 
@@ -26,9 +26,9 @@ export default function GoalPage() {
   const [searchKeyword, setSearchKeyword] = useState('')
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(5)
-  const [loading, setLoading] = useState(false)
   const [filterTercapai, setFilterTercapai] = useState<boolean | undefined>(undefined)
   const [selectedGoal, setSelectedGoal] = useState<GoalResponse | null>(null)
+  const pageState = usePageState(true)
 
   const tambahDialog = useDialog()
   const editDialog = useDialog()
@@ -44,52 +44,34 @@ export default function GoalPage() {
     return 'bg-green-500'
   }
 
-  const fetchData = () => {
-    handler_GetGoal(
-      {
-        setLoading,
-        whenSuccess: (pageableData) => {
-          setGoalss(pageableData.content)
-        },
-        whenFailed: (msg) => toast.error(msg)
-      },
-      {
-        page, size, keyword: searchKeyword, tercapai: filterTercapai
+  const fetchData = async (firstFetching: boolean = false) => {
+    try {
+      if (firstFetching) {
+        pageState.loading()
       }
-    )
-  }
-
-  const handleTambahGoal = (nama: string, target: number, tanggalTarget: string) => {
-    handler_PostGoal(
-      {
-        setLoading,
-        toaster: toast,
-        whenSuccess: () => {
-          fetchData()
-          tambahDialog.close()
+      await handler_GetGoal(
+        {
+          whenSuccess: (pageableData) => {
+            setGoalss(pageableData.content)
+          },
+          throwError: true
+        },
+        {
+          page, size, keyword: searchKeyword, tercapai: filterTercapai
         }
-      },
-      { nama, target, tanggalTarget }
-    )
-  }
-
-  const handleEditGoal = (id: string, nama: string, target: number, tanggalTarget: string) => {
-    handler_PutGoal(
-      {
-        toaster: toast,
-        whenSuccess: () => {
-          fetchData()
-          editDialog.close()
-        }
-      },
-      { id, nama, target, tanggalTarget }
-    )
+      )
+      pageState.resetError()
+    } catch (e: any) {
+      pageState.setError(e.message)
+    } finally {
+      pageState.finished()
+    }
   }
 
   const handleToggleStatus = (goal: GoalModel) => {
     handler_PatchGoalStatus(
       {
-        setLoading,
+        setLoading: pageState.loading,
         whenSuccess: () => {
           fetchData();
         },
@@ -103,38 +85,6 @@ export default function GoalPage() {
     )
   }
 
-  const handleTambahUang = (uang: number) => {
-    if (!selectedGoal) return
-    handler_PatchAddGoalFunds(
-      {
-        setLoading,
-        toaster: toast,
-        whenSuccess: () => {
-          setSelectedGoal(null)
-          tambahUangDialog.close()
-          fetchData()
-        }
-      },
-      { id: selectedGoal.id, uang }
-    )
-  }
-
-  const handleKurangiUang = (uang: number) => {
-    if (!selectedGoal) return
-    handler_PatchSubtractGoalFunds(
-      {
-        setLoading,
-        toaster: toast,
-        whenSuccess: () => {
-          setSelectedGoal(null)
-          kurangiUangDialog.close()
-          fetchData()
-        }
-      },
-      { id: selectedGoal.id, uang }
-    )
-  }
-
   const handleHapus = () => {
     if (!selectedGoal) return;
     confirmDialog.show({
@@ -145,7 +95,7 @@ export default function GoalPage() {
       onConfirm: () => {
         handler_DeleteGoal(
           {
-            setLoading,
+            setLoading: pageState.loading,
             toaster: toast,
             whenSuccess: () => {
               setSelectedGoal(null);
@@ -160,36 +110,42 @@ export default function GoalPage() {
   }
 
   useEffect(() => {
-    fetchData()
+    fetchData(true)
   }, [page, size, searchKeyword, filterTercapai])
 
+  if (pageState.loadingStatus) {
+    return <LoadingP />
+  }
+
+  if (pageState.error) {
+    return <ErrorPage message={pageState.error} />
+  }
 
   return (
     <>
       <DialogTambahGoal
         isOpen={tambahDialog.isOpen}
         onClose={tambahDialog.close}
-        onSubmit={handleTambahGoal}
+        whenSuccess={fetchData}
       />
       <DialogEditGoal
         isOpen={editDialog.isOpen}
         data={selectedGoal}
         onClose={editDialog.close}
-        onSubmit={handleEditGoal}
+        whenSuccess={fetchData}
       />
       <DialogKurangiUangGoal
         isOpen={kurangiUangDialog.isOpen}
-        isLoading={loading}
         onClose={kurangiUangDialog.close}
-        onSubmit={handleKurangiUang}
+        goal={selectedGoal}
+        whenSuccess={fetchData}
       />
       <DialogTambahUangGoal
         isOpen={tambahUangDialog.isOpen}
-        isLoading={loading}
         onClose={tambahUangDialog.close}
-        onSubmit={handleTambahUang}
+        goal={selectedGoal}
+        whenSuccess={fetchData}
       />
-
       {/* Main Content */}
       <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 sm:p-6 md:p-8">
         <div className="max-w-[1080px] mx-auto md:mx-0">

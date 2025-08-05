@@ -23,7 +23,7 @@ import { handleApiAction } from '@/lib/api';
 
 // Komponen
 import HeaderDashboard from './components/Header';
-import ListAkunSection from './akun/components/ListAkun';
+import ListAkunSection from './keuangan/components/ListAkun';
 import CashflowChartSection from './components/CashflowChart';
 import StatistikRingkasSection from './components/StatistikRingkasan';
 import TransaksiTerakhirSection from './components/TransaksiTerakhir';
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             loading={loading}
             onClickTrx={(trx) => {
               setSelectedTrx(trx);
-              dialogEditTransaksi.close()
+              dialogEditTransaksi.open()
             }}
             onDelete={handleHapusTransaksi}
           />
@@ -211,7 +211,6 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      {/* Dialog Tambah */}
       <DialogTambahTransaksi
         isOpen={dialogTambahTransaksi.isOpen}
         akunOptions={listAkun}
@@ -223,15 +222,13 @@ export default function DashboardPage() {
       <DialogTambahGoal
         isOpen={dialogTambahGoal.isOpen}
         onClose={dialogTambahGoal.close}
-        onSubmit={(nama, target, tanggalTarget) => {
+        whenSuccess={() => {
           dialogTambahGoal.close()
-          handleTambahGoal(nama, target, tanggalTarget);
           fetchData();
         }}
       />
       <DialogTambahKategori
         isOpen={dialogTambahKategori.isOpen}
-        isLoading={false}
         onClose={dialogTambahKategori.close}
       />
       <DialogTambahAkun

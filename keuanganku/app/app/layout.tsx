@@ -28,14 +28,14 @@ const MENU_LIST = [
   {
     label: 'Keuangan',
     items: [
-      { name: 'Akun & Transaksi', href: '/app/akun', icon: <FaBoxOpen /> },
+      { name: 'Akun & Transaksi', href: '/app/keuangan', icon: <FaBoxOpen /> },
       { name: 'Goal', href: '/app/goal', icon: <FaChartLine /> },
     ],
   },
   {
     label: 'Pengaturan',
     items: [
-      { name: 'Data Kategori', href: '/app/kategori', icon: <FaFileAlt /> },
+      { name: 'Kategori Transaksi', href: '/app/kategori', icon: <FaFileAlt /> },
       { name: 'Pengaturan', href: '/app/settings', icon: <FaCog /> },
       {
         name: 'Logout',
@@ -59,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setConfirmOpen(false)
     handler_AuthLogout({
       setLoading,
-      whenSuccess: () => {router.push(WEB_ROUTE.AUTH.LOGIN); },
+      whenSuccess: () => { router.push(WEB_ROUTE.AUTH.LOGIN); },
       toaster: toast
     })
   }
@@ -127,7 +127,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold'
                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                             }`}
-                          onClick={() => setSidebarOpen(false)} // close on mobile
+                          onClick={() => setSidebarOpen(false)}
                         >
                           <span className="text-base">{item.icon}</span>
                           <span className="text-sm">{item.name}</span>

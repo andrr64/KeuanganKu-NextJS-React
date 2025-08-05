@@ -1,7 +1,10 @@
 'use client'
 
 import { getInfo, updateAkun } from '@/actions/auth'
+import { handler_GetPengguna_me } from '@/actions/v2/handlers/pengguna'
 import DialogKonfirmasiPassword from '@/components/dialog/DialogKonfirmasiPassword'
+import LoadingP from '@/components/LoadingP'
+import ErrorPage from '@/components/pages/ErrorPage'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
@@ -11,6 +14,8 @@ export default function ProfilPage() {
     const [email, setEmail] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const [confirmType, setConfirmType] = useState<'save' | 'delete' | null>(null)
 
@@ -28,17 +33,19 @@ export default function ProfilPage() {
 
 
     const fetchData = async () => {
-        try {
-            const response = await getInfo();
-            if (response.success) {
-                setNama(response.data!.nama);
-                setEmail(response.data!.email);
+        await new Promise((res) => setTimeout(res, 500));
+        await handler_GetPengguna_me(
+            {
+                setLoading,
+                whenSuccess: (data) => {
+                    setNama(data.nama);
+                    setEmail(data.email)
+                    setError(null)
+                },
+                whenFailed: setError
             }
-        } catch (error: any) {
-            console.error('Gagal fetch data:', error.message);
-        }
+        )
     }
-
 
     const handleSaveConfirmed = async (passwordLama: string) => {
         try {
@@ -46,7 +53,7 @@ export default function ProfilPage() {
                 nama,
                 email,
                 passwordKonfirmasi: passwordLama,
-                passwordBaru: newPassword? newPassword : ""
+                passwordBaru: newPassword ? newPassword : ""
             };
 
             const res = await updateAkun(data);
@@ -56,7 +63,7 @@ export default function ProfilPage() {
         } catch (err: any) {
             toast.error(err.message || 'Terjadi kesalahan saat menyimpan perubahan');
             console.log(err.message);
-            
+
         } finally {
             closeConfirmDialog();
         }
@@ -67,12 +74,18 @@ export default function ProfilPage() {
         closeConfirmDialog()
     }
 
+    if (loading) {
+        return <LoadingP />
+    }
+    if (error) {
+        return <ErrorPage message={error} />
+    }
+
     return (
         <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h1 className="text-2xl font-bold mb-6">Pengaturan</h1>
-
                     <form
                         onSubmit={(e) => {
                             e.preventDefault()
@@ -80,7 +93,6 @@ export default function ProfilPage() {
                         }}
                         className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col gap-4"
                     >
-                        {/* Nama */}
                         <div>
                             <label htmlFor="nama" className="block text-sm font-medium mb-1">Nama</label>
                             <input

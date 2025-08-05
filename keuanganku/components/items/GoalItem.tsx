@@ -1,13 +1,14 @@
-import { GoalResponse } from '@/types/goal'
+import { formatTanggal } from '@/lib/timeutil'
+import { GoalModel } from '@/types/model/Goal'
 import { FaCheckCircle, FaPlus, FaMinus, FaTrash } from 'react-icons/fa'
 
 interface GoalItemProps {
-    goal: GoalResponse
+    goal: GoalModel
     progress: number
     formatRupiah: (value: number) => string
     getProgressColor: (progress: number) => string
-    onEdit: (goal: GoalResponse) => void
-    onCheckPress: (goal: GoalResponse) => void
+    onEdit: (goal: GoalModel) => void
+    onCheckPress: (goal: GoalModel) => void
     onTambahUang: () => void
     onKurangiUang: () => void // ✅ Tambahkan prop baru
     onHapus: () => void
@@ -27,7 +28,7 @@ export default function GoalItem({
     return (
         <li
             className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 
-            transition-colors duration-200 hover:bg-gray-50 mb-3 dark:hover:bg-gray-700 cursor-pointer"
+            transition-colors duration-200 hover:bg-gray-50 mb-3 dark:hover:bg-gray-600 cursor-pointer"
             onClick={() => onEdit?.(goal)}
         >
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 flex-wrap">
@@ -54,7 +55,7 @@ export default function GoalItem({
                     </div>
 
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Deadline: {goal.tanggalTarget}
+                        Deadline: {formatTanggal(goal.tanggalTarget)}
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-1">
