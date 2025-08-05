@@ -92,7 +92,8 @@ export async function handleApiResponse<T>(
 ) {
     params.setLoading?.(true);
     const { success = "Sukses", error = "Terjadi kesalahan" } = defaultMessages || {};
-
+    let statusError: string | null = null;
+    const letThrowError = params.throwError == true
     try {
         const response = await responsePromise;
         if (response.success && response.data !== undefined) {
@@ -102,12 +103,17 @@ export async function handleApiResponse<T>(
             const errorMsg = response.message || error;
             params.toaster?.error?.(errorMsg);
             params.whenFailed?.(errorMsg);
+            statusError = errorMsg; // 🛠️ SET DI SINI
         }
     } catch (err: any) {
         const errorMsg = err.message || error;
         params.toaster?.error?.(errorMsg);
         params.whenFailed?.(errorMsg);
+        statusError = errorMsg; 
     } finally {
         params.setLoading?.(false);
+        if (statusError && letThrowError) {
+            throw new Error(statusError);
+        }
     }
 }
