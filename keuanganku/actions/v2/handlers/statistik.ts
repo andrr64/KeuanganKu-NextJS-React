@@ -5,7 +5,7 @@ import { API_ROUTES } from "@/lib/API/v2/routes";
 
 export const handler_GetStatistik_transaksiTiapKategori = async (
     actions: HandlerParams<StatistikTransaksiTiapKategori>,
-    period: 1 | 2 | 3
+    period: 1 | 2 | 3 | number
 ) => {
     const url = `${API_ROUTES.STATISTIK.KATEGORI}?periode=${period}`;
     await handleApiResponse(

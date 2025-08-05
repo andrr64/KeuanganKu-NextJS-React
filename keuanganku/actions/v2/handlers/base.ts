@@ -3,4 +3,5 @@ export type HandlerParams<T = undefined> = {
     toaster?: any;
     whenSuccess?: (data: T) => void;
     whenFailed?: (msg: string) => void;
+    throwError?: boolean
 }

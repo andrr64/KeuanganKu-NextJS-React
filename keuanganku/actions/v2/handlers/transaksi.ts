@@ -23,7 +23,7 @@ export const handler_GetTransaksi = async (
             url.toString(),
             { method: "GET" }
         ),
-        actions
+        actions,
     )
 }
 
