@@ -1,7 +1,7 @@
 export type PostGoal = {
     nama: string;
-    target: number;
-    tanggalTarget: string;
+    target?: number;
+    tanggalTarget?: string;
 }
 
 export type GetGoal = {

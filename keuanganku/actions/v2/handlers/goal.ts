@@ -11,7 +11,11 @@ export const handler_PostGoal = async (params: HandlerParams, body: PostGoal) =>
             API_ROUTES.GOAL.BASE,
             {
                 method: "POST",
-                body: JSON.stringify(body)
+                body: JSON.stringify({
+                    nama: body.nama,
+                    target: body.target? body.target : null,
+                    tanggalTarget: body.tanggalTarget? body.tanggalTarget : null
+                })
             }
         ),
         params
@@ -35,8 +39,8 @@ export const handler_GetGoal = async (params: HandlerParams<Pageable<GoalModel[]
 
 export const handler_PutGoal = async (params: HandlerParams, data: PutGoal) => {
     const url = API_ROUTES.GOAL.BY_ID(data.id)
-    const {id, ...body} = data
-    await handleApiResponse (
+    const { id, ...body } = data
+    await handleApiResponse(
         apiRequester(
             url.toString(),
             {
@@ -49,7 +53,7 @@ export const handler_PutGoal = async (params: HandlerParams, data: PutGoal) => {
 }
 
 export const handler_DeleteGoal = async (params: HandlerParams, id: string) => {
-    await handleApiResponse (
+    await handleApiResponse(
         apiRequester(
             API_ROUTES.GOAL.BY_ID(id),
             {
@@ -60,42 +64,42 @@ export const handler_DeleteGoal = async (params: HandlerParams, id: string) => {
     )
 }
 
-export const handler_PatchSubtractGoalFunds = async(params: HandlerParams, body: PostKurangiUangGoal) => {
-    const {id, uang} = body;
-    await handleApiResponse (
-        apiRequester (
+export const handler_PatchSubtractGoalFunds = async (params: HandlerParams, body: PostKurangiUangGoal) => {
+    const { id, uang } = body;
+    await handleApiResponse(
+        apiRequester(
             API_ROUTES.GOAL.PATCH(id, "subtract_funds"),
             {
                 method: "PATCH",
-                body: JSON.stringify({uang})
+                body: JSON.stringify({ uang })
             }
         ),
         params
     );
 }
 
-export const handler_PatchAddGoalFunds = async(params: HandlerParams, body: PostKurangiUangGoal) => {
-    const {id, uang} = body;
-    await handleApiResponse (
-        apiRequester (
+export const handler_PatchAddGoalFunds = async (params: HandlerParams, body: PostKurangiUangGoal) => {
+    const { id, uang } = body;
+    await handleApiResponse(
+        apiRequester(
             API_ROUTES.GOAL.PATCH(id, "add_funds"),
             {
                 method: "PATCH",
-                body: JSON.stringify({uang})
+                body: JSON.stringify({ uang })
             }
         ),
         params
     );
 }
 
-export const handler_PatchGoalStatus = async(params: HandlerParams, data: {id: string; tercapai: boolean}) => {
-    const {id, tercapai} = data;
-    await handleApiResponse (
-        apiRequester (
+export const handler_PatchGoalStatus = async (params: HandlerParams, data: { id: string; tercapai: boolean }) => {
+    const { id, tercapai } = data;
+    await handleApiResponse(
+        apiRequester(
             API_ROUTES.GOAL.PATCH(id, "update_status"),
             {
                 method: "PATCH",
-                body: JSON.stringify({tercapai})
+                body: JSON.stringify({ tercapai })
             }
         ),
         params
