@@ -2,7 +2,7 @@ import { PostAKunBody as PostAkunBody, PutAkunBody } from "@/types/request/akun"
 import { HandlerParams } from "./base";
 import { apiRequester, handleApiResponse } from "@/lib/API/v2/requester";
 import { API_ROUTES } from "@/lib/API/v2/routes";
-import { AkunModel } from "@/types/model/akun";
+import { AkunModel } from "@/types/model/Akun";
 
 export const handler_PostAkun = async (
     params: HandlerParams,

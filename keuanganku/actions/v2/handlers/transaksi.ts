@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/lib/API/v2/routes"
 import { HandlerParams } from "./base"
 import { GetTransaksiParams, PostTransaksiBody, PutTransaksiBody } from "@/types/request/transaksi"
 import { Pageable } from "@/types/response/pageable"
-import { TransaksiModel } from "@/types/model/Transaksi"
+import { TransaksiModel } from "@/types/model/transaksi"
 
 export const handler_GetTransaksi = async (
     actions: HandlerParams<Pageable<TransaksiModel[]>>,
