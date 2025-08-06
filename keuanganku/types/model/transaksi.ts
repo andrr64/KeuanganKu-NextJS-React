@@ -1,4 +1,4 @@
-import { KategoriModel } from "./Kategori";
+import { KategoriModel } from "./kategori";
 
 export interface TransaksiModel {
     id: string;

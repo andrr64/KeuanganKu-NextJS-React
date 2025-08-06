@@ -14,3 +14,9 @@ export type StatistikRingkasanBulanIni = {
     totalPengeluaranBulanIni: number;
     cashflowBulanIni: number;
 }
+
+export type StatistikCashflow = {
+    tanggal: string;
+    pemasukan: number;
+    pengeluaran: number;    
+}
