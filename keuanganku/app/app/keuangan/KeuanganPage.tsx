@@ -6,10 +6,9 @@ import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { useDialog } from '@/hooks/dialog';
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
-import { RingkasanKategoriItem } from '@/actions/transaksi';
 import { getColors } from '@/lib/utils';
 import { confirmDialog } from '@/lib/confirm-dialog';
-import { handler_GetAkun } from '@/actions/v2/handlers/akun';
+import { handler_DeleteAkun, handler_GetAkun } from '@/actions/v2/handlers/akun';
 import { handler_GetTransaksi } from '@/actions/v2/handlers/transaksi';
 
 import Header from './components/Header';
@@ -20,13 +19,13 @@ import EmptyAkunState from './components/EmptyAkunState';
 import LoadingP from '@/components/LoadingP';
 import ErrorPage from '@/components/pages/ErrorPage';
 import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
-import { handler_HapusAkun } from '@/actions/handler/transaksi';
-import { AkunModel } from '@/types/model/akun';
 import { usePageState } from '@/hooks/pagestate';
 import { handler_GetStatistik_transaksiTiapKategori } from '@/actions/v2/handlers/statistik';
 import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
+import { AkunModel } from '@/types/model/Akun';
+import { TransaksiDariKategori } from '@/types/response/statistik';
 
-type RingkasanKategoriItemWithColor = RingkasanKategoriItem & { warna: string };
+type RingkasanKategoriItemWithColor = TransaksiDariKategori & { warna: string };
 
 export default function AkunPage() {
   const [accountList, setAccountList] = useState<AkunResponse[]>([]);
@@ -138,13 +137,12 @@ export default function AkunPage() {
       description: "Anda yakin? data tidak bisa dikembalikan",
       confirmText: "Ya, hapus",
       onConfirm: () => {
-        handler_HapusAkun({
+        handler_DeleteAkun({
           toaster: toast,
-          id: akun.id,
           whenSuccess: () => {
             refreshAllData();
-          },
-        });
+          }
+        }, akun.id);
       }
     });
   };
@@ -210,16 +208,16 @@ export default function AkunPage() {
 
   return (
     <>
-      <DialogTambahTransaksi 
-        isOpen={dialogTambahTransaksi.isOpen} 
-        closeDialog= {dialogTambahTransaksi.close}
+      <DialogTambahTransaksi
+        isOpen={dialogTambahTransaksi.isOpen}
+        closeDialog={dialogTambahTransaksi.close}
         whenSuccess={refreshAllData}
-        akunOptions={accountList}      
+        akunOptions={accountList}
       />
 
-      <DialogTambahAkun 
-        isOpen={dialogTambahAkun.isOpen} 
-        closeDialog={dialogTambahAkun.close} 
+      <DialogTambahAkun
+        isOpen={dialogTambahAkun.isOpen}
+        closeDialog={dialogTambahAkun.close}
         whenSuccess={fetchAccounts}
       />
 
@@ -233,7 +231,7 @@ export default function AkunPage() {
 
           <ListAkunSection
             listAkun={accountList}
-            onEdit={(akun) => {}}
+            onEdit={(akun) => { }}
             onHapus={(akun) => handleDeleteAccount(akun)}
           />
 
