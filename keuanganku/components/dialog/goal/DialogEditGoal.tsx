@@ -31,8 +31,8 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
     if (isOpen && data) {
       setFormData({
         nama: data.nama,
-        target: data.target.toString(),
-        tanggalTarget: getDateFromISO(data.tanggalTarget),
+        target: data.target?data.target.toString() : '',
+        tanggalTarget: data.tanggalTarget?data.tanggalTarget: '',
       });
     } else {
       setFormData({ nama: '', target: '', tanggalTarget: '' });
@@ -51,16 +51,18 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
       name: 'target',
       label: 'Target (Rp)',
       type: 'number',
-      required: true,
       placeholder: 'Contoh: 50000000',
     },
     {
       name: 'tanggalTarget',
       label: 'Tanggal Target',
-      type: 'date', // ✅ Hanya tanggal
-      required: true,
+      type: 'date', 
     },
   ];
+
+  useState(() => {}, [
+    f
+  ])
 
   const handleSubmit = async (formValues: Record<string, any>) => {
     const { nama, target, tanggalTarget } = formValues;
@@ -69,12 +71,6 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
 
     if (!nama?.trim()) {
       return alert('Nama goal wajib diisi.');
-    }
-    if (!target || isNaN(Number(target)) || Number(target) <= 0) {
-      return alert('Target harus berupa angka positif.');
-    }
-    if (!tanggalTarget) {
-      return alert('Tanggal target wajib dipilih.');
     }
 
     const newData: PutGoal = {

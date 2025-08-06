@@ -4,22 +4,8 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
-  ambilRecentTransaksi,
-  EditTransaksiParams,
-  getKategoriPengeluaranStatistik,
-  KategoriStatistik,
-  tambahTransaksi,
-  TambahTransaksiParams,
-  updateTransaksi
-} from '@/actions/transaksi';
-import {
   RingkasanBulanIniResponse,
-  getRecentDashboard
 } from '@/actions/dashboard';
-import {
-  getAllAkun,
-} from '@/actions/akun';
-import { handleApiAction } from '@/lib/api';
 
 // Komponen
 import HeaderDashboard from './components/Header';
@@ -33,22 +19,23 @@ import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKateg
 import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
 import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
 import RingkasanGoalSection from './components/RingkasanGoal';
-import KategoriStatistikSection from './components/KategoriStatistikSection';
 import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
 import { confirmDialog } from '@/lib/confirm-dialog';
 import { handler_DeleteAkun, handler_GetAkun } from '@/actions/v2/handlers/akun';
-import { handler_GetGoal, handler_PostGoal } from '@/actions/v2/handlers/goal';
-import { PostGoalParams } from '@/actions/goal';
+import { handler_GetGoal } from '@/actions/v2/handlers/goal';
 import { useDialog } from '@/hooks/dialog';
 import { handler_GetTransaksi_terbaru } from '@/actions/v2/handlers/transaksi';
 import { TransaksiModel } from '@/types/model/Transaksi';
 import { AkunModel } from '@/types/model/akun';
 import { GoalModel } from '@/types/model/Goal';
 import { handler_GetStatistik_ringkasan } from '@/actions/v2/handlers/statistik';
+import { usePageState } from '@/hooks/pagestate';
+import LoadingP from '@/components/LoadingP';
+import ErrorPage from '@/components/pages/ErrorPage';
 
 export default function DashboardPage() {
   const [selectedTrx, setSelectedTrx] = useState<TransaksiModel | null>(null);
-  const [loading, setLoading] = useState(false);
+  const pageState = usePageState();
 
   const [listAkun, setListAkun] = useState<AkunModel[]>([]);
   const [recentTransaksi, setRecentTransaksi] = useState<TransaksiModel[]>([]);
@@ -65,16 +52,16 @@ export default function DashboardPage() {
 
   const [akunYangDiedit, setAkunYangDiedit] = useState<AkunModel | null>(null);
 
-  const fetchAkun = () => {
-    handler_GetAkun(
+  const fetchAkun = async () => {
+    await handler_GetAkun(
       {
         whenSuccess: setListAkun
       }
     )
   };
 
-  const fetchGoal = () => {
-    handler_GetGoal(
+  const fetchGoal = async () => {
+    await handler_GetGoal(
       {
         whenSuccess: (data) => {
           setGoalList(data.content)
@@ -84,8 +71,8 @@ export default function DashboardPage() {
     )
   };
 
-  const fetchRecentTransaksi = () => {
-    handler_GetTransaksi_terbaru(
+  const fetchRecentTransaksi = async () => {
+    await handler_GetTransaksi_terbaru(
       {
         whenSuccess: (data) => {
           setRecentTransaksi(data)
@@ -94,19 +81,27 @@ export default function DashboardPage() {
     )
   };
 
-  const fetchDataRingkasanBulanIni = () => {
-    handler_GetStatistik_ringkasan(
+  const fetchDataRingkasanBulanIni = async () => {
+    await handler_GetStatistik_ringkasan(
       {
         whenSuccess: (data) => setStatistikRingkas(data)
       }
     )
   };
 
-  const fetchData = () => {
-    fetchAkun();
-    fetchGoal();
-    fetchRecentTransaksi();
-    fetchDataRingkasanBulanIni();
+  const fetchData = async (firstFetch: boolean = false) => {
+    try {
+      pageState.setLoading(firstFetch)
+      await fetchAkun()
+      await fetchGoal()
+      await fetchRecentTransaksi()
+      await fetchDataRingkasanBulanIni()
+      pageState.resetError()
+    } catch (err: any) {
+      pageState.setError(err.message)
+    } finally {
+      pageState.finished()
+    }
   };
 
   const handleHapusAkun = (akun: AkunModel) => {
@@ -118,9 +113,9 @@ export default function DashboardPage() {
         onConfirm: () => {
           handler_DeleteAkun(
             {
-              setLoading,
+              setLoading: pageState.setLoading,
               toaster: toast,
-              whenSuccess: () => fetchData()
+              whenSuccess: fetchData
             },
             akun.id
           )
@@ -141,25 +136,17 @@ export default function DashboardPage() {
     )
   }
 
-  const handleTambahGoal = (nama: string, target: number, tanggalTarget: string) => {
-    const body: PostGoalParams = { nama, target, tanggalTarget }
+  useEffect(() => {
+    fetchData(true);
+  }, []);
 
-    handler_PostGoal(
-      {
-        setLoading,
-        toaster: toast,
-        whenSuccess: () => {
-          dialogTambahGoal.open()
-          fetchData()
-        }
-      },
-      body
-    )
+  if (pageState.loadingStatus) {
+    return <LoadingP />
   }
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  if (pageState.error) {
+    return <ErrorPage message={pageState.error} />
+  }
 
   return (
     <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
@@ -177,7 +164,7 @@ export default function DashboardPage() {
             listAkun={listAkun}
             onEdit={(akun) => {
               setAkunYangDiedit(akun);
-              dialogEditAkun.close()
+              dialogEditAkun.open()
             }}
             onHapus={handleHapusAkun}
           />
@@ -197,7 +184,7 @@ export default function DashboardPage() {
           <CashflowChartSection />
           <TransaksiTerakhirSection
             data={recentTransaksi}
-            loading={loading}
+            loading={pageState.loadingStatus}
             onClickTrx={(trx) => {
               setSelectedTrx(trx);
               dialogEditTransaksi.open()
@@ -206,26 +193,19 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <RingkasanGoalSection goals={recentGoal} />
-        </section>
+        </section> */}
       </div>
-
       <DialogTambahTransaksi
         isOpen={dialogTambahTransaksi.isOpen}
         akunOptions={listAkun}
         closeDialog={() => dialogTambahTransaksi.close}
-        whenSuccess={() => {
-          dialogTambahTransaksi.open()
-          fetchData()
-        }} />
+        whenSuccess={fetchData} />
       <DialogTambahGoal
         isOpen={dialogTambahGoal.isOpen}
         onClose={dialogTambahGoal.close}
-        whenSuccess={() => {
-          dialogTambahGoal.close()
-          fetchData();
-        }}
+        whenSuccess={fetchData}
       />
       <DialogTambahKategori
         isOpen={dialogTambahKategori.isOpen}
@@ -233,7 +213,6 @@ export default function DashboardPage() {
       />
       <DialogTambahAkun
         isOpen={dialogTambahAkun.isOpen}
-        isLoading={false}
         closeDialog={dialogTambahAkun.close}
         whenSuccess={fetchAkun}
       />
@@ -244,23 +223,18 @@ export default function DashboardPage() {
           dialogEditAkun.close()
           setAkunYangDiedit(null)
         }}
-        whenSuccess={() => {
-          fetchAkun()
-        }}
+        whenSuccess={fetchAkun}
       />
-
-      {/* Dialog Edit & Hapus Transaksi */}
       <DialogEditTransaksi
         isOpen={dialogEditTransaksi.isOpen}
         isLoading={false}
         transaksiData={selectedTrx}
         akunOptions={listAkun}
-        closeDialog={dialogEditTransaksi.close}
-        whenSuccess={() => {
+        closeDialog={() => {
           dialogEditTransaksi.close()
           setSelectedTrx(null)
-          fetchData()
         }}
+        whenSuccess={fetchData}
       />
     </main>
   );

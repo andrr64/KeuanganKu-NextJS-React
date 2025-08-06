@@ -10,7 +10,6 @@ export default function DialogTambahAkun({
     whenSuccess
 }: {
     isOpen: boolean;
-    isLoading: boolean;
     closeDialog: () => void;
     whenSuccess: () => void;
 }) {

@@ -23,23 +23,21 @@ export default function DialogTambahGoal({ isOpen, onClose, whenSuccess }: Props
     },
     {
       name: 'target',
-      label: 'Target (Rp)',
+      label: 'Harga (Opsional)',
       type: 'number',
-      required: true,
       placeholder: 'Contoh: 50000000',
     },
     {
       name: 'tanggalTarget',
-      label: 'Tanggal',
-      type: 'date',
-      required: true
+      label: 'Tenggat (Opsional)',
+      type: 'date'
     },
   ];
 
   const [formData, setFormData] = useState({
     nama: '',
     target: '',
-    tanggalTarget: getNowDateISOString(),
+    tanggalTarget: '',
   });
 
   useEffect(() => {
@@ -47,7 +45,7 @@ export default function DialogTambahGoal({ isOpen, onClose, whenSuccess }: Props
       {
         nama: '',
         target: '',
-        tanggalTarget: getNowDateISOString(),
+        tanggalTarget: '',
       }
     )
   }, [isOpen])
@@ -58,14 +56,12 @@ export default function DialogTambahGoal({ isOpen, onClose, whenSuccess }: Props
     if (!nama?.trim()) {
       return alert('Nama goal wajib diisi.');
     }
-    if (!target || isNaN(Number(target)) || Number(target) <= 0) {
-      return alert('Target harus berupa angka positif.');
+    const dataX = {
+      nama: nama.trim(),
+      target: target,
+      tanggalTarget: tanggalTarget,
     }
-    if (!tanggalTarget) {
-      return alert('Tanggal target wajib dipilih.');
-    }
-
-      handler_PostGoal(
+    handler_PostGoal(
       {
         toaster: toast,
         whenSuccess: () => {
@@ -73,11 +69,7 @@ export default function DialogTambahGoal({ isOpen, onClose, whenSuccess }: Props
           whenSuccess();
         },
       },
-      {
-        nama: nama.trim(),
-        target: target,
-        tanggalTarget: tanggalTarget,
-      }
+      dataX
     );
   };
 

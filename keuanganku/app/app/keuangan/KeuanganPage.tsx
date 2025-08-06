@@ -3,16 +3,14 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
-
 import { useDialog } from '@/hooks/dialog';
 import { AkunResponse } from '@/types/akun';
 import { TransaksiResponse } from '@/types/transaksi';
-import { getRingkasan, RingkasanKategoriItem, RingkasanKategoriResponse } from '@/actions/transaksi';
+import { RingkasanKategoriItem } from '@/actions/transaksi';
 import { getColors } from '@/lib/utils';
 import { confirmDialog } from '@/lib/confirm-dialog';
-import { handleApiAction } from '@/lib/api';
 import { handler_GetAkun } from '@/actions/v2/handlers/akun';
-import { handler_GetTransaksi, handler_DeleteTransaksi } from '@/actions/v2/handlers/transaksi';
+import { handler_GetTransaksi } from '@/actions/v2/handlers/transaksi';
 
 import Header from './components/Header';
 import ListAkunSection from './components/ListAkun';
@@ -26,6 +24,7 @@ import { handler_HapusAkun } from '@/actions/handler/transaksi';
 import { AkunModel } from '@/types/model/akun';
 import { usePageState } from '@/hooks/pagestate';
 import { handler_GetStatistik_transaksiTiapKategori } from '@/actions/v2/handlers/statistik';
+import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
 
 type RingkasanKategoriItemWithColor = RingkasanKategoriItem & { warna: string };
 
@@ -33,7 +32,8 @@ export default function AkunPage() {
   const [accountList, setAccountList] = useState<AkunResponse[]>([]);
   const [isAccountEmpty, setIsAccountEmpty] = useState(false);
 
-  const addAccountDialog = useDialog();
+  const dialogTambahAkun = useDialog();
+  const dialogTambahTransaksi = useDialog();
 
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
   const [timeFilter, setTimeFilter] = useState<string>('semua');
@@ -196,63 +196,78 @@ export default function AkunPage() {
     return (
       <>
         <DialogTambahAkun
-          isOpen={addAccountDialog.isOpen}
-          isLoading={false}
-          closeDialog={addAccountDialog.close}
+          isOpen={dialogTambahAkun.isOpen}
+          closeDialog={dialogTambahAkun.close}
           whenSuccess={() => {
-            addAccountDialog.close();
+            dialogTambahAkun.close();
             fetchAccounts();
           }}
         />
-        <EmptyAkunState onTambahClick={addAccountDialog.open} />
+        <EmptyAkunState onTambahClick={dialogTambahAkun.open} />
       </>
     );
   }
 
   return (
-    <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
-      <div className="max-w-[1280px] flex flex-col gap-8 mx-auto md:mx-0">
-        <Header
-          fetchData={() => refreshAllData()}
-          onTambahTransaksiClick={() => { }}
-          onTambahAkunClick={addAccountDialog.open}
-        />
+    <>
+      <DialogTambahTransaksi 
+        isOpen={dialogTambahTransaksi.isOpen} 
+        closeDialog= {dialogTambahTransaksi.close}
+        whenSuccess={refreshAllData}
+        akunOptions={accountList}      
+      />
 
-        <ListAkunSection
-          listAkun={accountList}
-          onEdit={() => { }}
-          onHapus={handleDeleteAccount}
-        />
+      <DialogTambahAkun 
+        isOpen={dialogTambahAkun.isOpen} 
+        closeDialog={dialogTambahAkun.close} 
+        whenSuccess={fetchAccounts}
+      />
 
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TransaksiTerbaruSection
-            transaksi={latestTransactions}
-            onClickTrx={() => { }}
-            onDelete={() => { }}
-            filterWaktu={timeFilter}
-            filterAkun={accountFilter}
-            jenisTransaksi={transactionType}
-            akunOptions={accountOptions}
-            setFilterWaktu={setTimeFilter}
-            setFilterAkun={setAccountFilter}
-            setJenisTransaksi={setTransactionType}
-            page={currentPage}
-            setPage={setCurrentPage}
-            totalPages={totalPages}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            size={pageSize}
-            setSize={setPageSize}
+      <main className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300 p-4 sm:p-6 md:p-8">
+        <div className="max-w-[1280px] flex flex-col gap-8 mx-auto md:mx-0">
+          <Header
+            fetchData={() => refreshAllData()}
+            onTambahTransaksiClick={dialogTambahTransaksi.open}
+            onTambahAkunClick={dialogTambahAkun.open}
           />
 
-          <RingkasanUangSection
-            periode={selectedPeriod}
-            setPeriode={setSelectedPeriod}
-            pengeluaranList={summaryExpenseList}
-            pemasukanList={summaryIncomeList}
+          <ListAkunSection
+            listAkun={accountList}
+            onEdit={(akun) => {}}
+            onHapus={(akun) => handleDeleteAccount(akun)}
           />
-        </section>
-      </div>
-    </main>
+
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TransaksiTerbaruSection
+              transaksi={latestTransactions}
+              onClickTrx={() => { }}
+              onDelete={() => { }}
+              filterWaktu={timeFilter}
+              filterAkun={accountFilter}
+              jenisTransaksi={transactionType}
+              akunOptions={accountOptions}
+              setFilterWaktu={setTimeFilter}
+              setFilterAkun={setAccountFilter}
+              setJenisTransaksi={setTransactionType}
+              page={currentPage}
+              setPage={setCurrentPage}
+              totalPages={totalPages}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              size={pageSize}
+              setSize={setPageSize}
+            />
+
+            <RingkasanUangSection
+              periode={selectedPeriod}
+              setPeriode={setSelectedPeriod}
+              pengeluaranList={summaryExpenseList}
+              pemasukanList={summaryIncomeList}
+            />
+          </section>
+        </div>
+      </main>
+
+    </>
   );
 }

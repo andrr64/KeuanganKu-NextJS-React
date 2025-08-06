@@ -1,5 +1,6 @@
 import { formatTanggal } from '@/lib/timeutil'
 import { GoalModel } from '@/types/model/Goal'
+import { useEffect } from 'react'
 import { FaCheckCircle, FaPlus, FaMinus, FaTrash } from 'react-icons/fa'
 
 interface GoalItemProps {
@@ -8,7 +9,7 @@ interface GoalItemProps {
     formatRupiah: (value: number) => string
     getProgressColor: (progress: number) => string
     onEdit: (goal: GoalModel) => void
-    onCheckPress: (goal: GoalModel) => void
+    onToggleStatus: (goal: GoalModel) => void
     onTambahUang: () => void
     onKurangiUang: () => void // ✅ Tambahkan prop baru
     onHapus: () => void
@@ -20,7 +21,7 @@ export default function GoalItem({
     formatRupiah,
     getProgressColor,
     onEdit,
-    onCheckPress,
+    onToggleStatus,
     onTambahUang,
     onKurangiUang,
     onHapus
@@ -45,19 +46,25 @@ export default function GoalItem({
 
                 {/* Kanan: Info Finansial + Aksi */}
                 <div className="flex flex-col gap-2 w-full sm:w-auto">
-                    <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between gap-2 w-full sm:w-72">
-                        <span className="font-medium">Terkumpul</span>
-                        <span>Rp{formatRupiah(goal.terkumpul)}</span>
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between gap-2 w-full sm:w-72">
-                        <span className="font-medium">Target</span>
-                        <span>Rp{formatRupiah(goal.target)}</span>
-                    </div>
-
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Deadline: {formatTanggal(goal.tanggalTarget)}
-                    </div>
-
+                    {goal.target && (
+                        <>
+                            <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between gap-2 w-full sm:w-72">
+                                <span className="font-medium">Terkumpul</span>
+                                <span>Rp{formatRupiah(goal.terkumpul)}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300 flex justify-between gap-2 w-full sm:w-72">
+                                <span className="font-medium">Target</span>
+                                <span>{`Rp${formatRupiah(goal.target)}`}
+                                </span>
+                            </div>
+                        </>
+                    )
+                    }
+                    {goal.tanggalTarget && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Deadline: {formatTanggal(goal.tanggalTarget)}
+                        </div>
+                    )}
                     <div className="flex flex-wrap gap-2 mt-1">
                         <button
                             className={`text-xs px-3 py-1.5 rounded-md flex items-center gap-1 transition-all font-medium
@@ -67,7 +74,7 @@ export default function GoalItem({
                                 }`}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onCheckPress(goal)
+                                onToggleStatus(goal)
                             }}
                         >
                             <FaCheckCircle className="text-sm" />
@@ -111,17 +118,19 @@ export default function GoalItem({
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full mt-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
-                <div
-                    className={`h-full transition-all duration-300 ${getProgressColor(progress)}`}
-                    style={{ width: `${progress}%` }}
-                />
-                <span
-                    className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-800 dark:text-white"
-                >
-                    {Math.round(progress)}%
-                </span>
-            </div>
+            {goal.target && (
+                <div className="w-full mt-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
+                    <div
+                        className={`h-full transition-all duration-300 ${getProgressColor(progress)}`}
+                        style={{ width: `${progress}%` }}
+                    />
+                    <span
+                        className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-800 dark:text-white"
+                    >
+                        {Math.round(progress)}%
+                    </span>
+                </div>
+            )}
         </li>
     )
 }

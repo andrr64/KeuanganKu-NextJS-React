@@ -71,7 +71,6 @@ export default function GoalPage() {
   const handleToggleStatus = (goal: GoalModel) => {
     handler_PatchGoalStatus(
       {
-        setLoading: pageState.loading,
         whenSuccess: () => {
           fetchData();
         },
@@ -110,8 +109,12 @@ export default function GoalPage() {
   }
 
   useEffect(() => {
-    fetchData(true)
+    fetchData()
   }, [page, size, searchKeyword, filterTercapai])
+
+  useEffect(() => {
+    fetchData(true)
+  }, [])
 
   if (pageState.loadingStatus) {
     return <LoadingP />
@@ -235,7 +238,7 @@ export default function GoalPage() {
                       progress={progress}
                       formatRupiah={formatRupiah}
                       getProgressColor={getProgressColor}
-                      onCheckPress={handleToggleStatus}
+                      onToggleStatus={handleToggleStatus}
                       onEdit={() => {
                         setSelectedGoal(goal)
                         editDialog.open()
