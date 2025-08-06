@@ -8,29 +8,20 @@ import {
     YAxis,
     Tooltip,
 } from 'recharts';
-import { useEffect, useState } from 'react';
 import { FaChartLine } from 'react-icons/fa';
-import { handleApiAction } from '@/lib/api';
-import { ambilTransaksi, CashflowDataPoint, getCashflowGraph } from '@/actions/transaksi';
+import { StatistikCashflow } from '@/types/response/statistik';
 
-export default function CashflowChartSection() {
-    const [periode, setPeriode] = useState<1 | 2 | 3>(1); // 1: Minggu, 2: Bulan, 3: Tahun
-    const [data, setData] = useState<CashflowDataPoint[]>([]);
-    const [loading, setLoading] = useState(false);
+interface CashflowChartSectionProps {
+    periode: 1 | 2 | 3;
+    setPeriode: (periode: 1 | 2 | 3) => void;
+    data: StatistikCashflow[];
+}
 
-    const fetchCashflow = async (periode: 1 | 2 | 3) => {
-        await handleApiAction<CashflowDataPoint[]>({
-            action: () => getCashflowGraph(periode),
-            onSuccess: setData,
-            onFinally: () => setLoading(false),
-        });
-    };
-
-    useEffect(() => {
-        setLoading(true);
-        fetchCashflow(periode);
-    }, [periode]);
-
+export default function CashflowChartSection({
+    periode,
+    setPeriode,
+    data
+}: CashflowChartSectionProps) {
     return (
         <section className="space-y-4">
             <h2 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-white flex items-center gap-2">
@@ -65,6 +56,23 @@ export default function CashflowChartSection() {
                                 tick={{ fontSize: 12, fill: '#8884d8' }}
                                 axisLine={false}
                                 tickLine={false}
+                                tickFormatter={(value) => {
+                                    console.log(value);
+                                    if (periode === 1) {
+                                        const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                                        const dayIndex = parseInt(value) - 1;
+                                        return days[dayIndex] || value;
+                                        return value
+                                    } else if (periode === 2) {
+                                        return value;
+                                    } else if (periode === 3) {
+                                        // Periode tahun: tampilkan bulan
+                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                                        const monthIndex = parseInt(value) - 1;
+                                        return months[monthIndex] || value;
+                                    }
+                                    return value;
+                                }}
                             />
                             <YAxis
                                 tickFormatter={(val) => `Rp${(val / 1000).toFixed(0)}k`}

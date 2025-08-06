@@ -3,10 +3,6 @@
 
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  RingkasanBulanIniResponse,
-} from '@/actions/dashboard';
-
 // Komponen
 import HeaderDashboard from './components/Header';
 import ListAkunSection from './keuangan/components/ListAkun';
@@ -18,20 +14,20 @@ import DialogTambahGoal from '@/components/dialog/goal/DialogTambahGoal';
 import DialogTambahKategori from '@/components/dialog/kategori/DialogTambahKategori';
 import DialogTambahTransaksi from '@/components/dialog/transaksi/DialogTambahTransaksi';
 import DialogTambahAkun from '@/components/dialog/akun/DialogTambahAkun';
-import RingkasanGoalSection from './components/RingkasanGoal';
 import DialogEditAkun from '@/components/dialog/akun/DialogEditAkun';
 import { confirmDialog } from '@/lib/confirm-dialog';
 import { handler_DeleteAkun, handler_GetAkun } from '@/actions/v2/handlers/akun';
 import { handler_GetGoal } from '@/actions/v2/handlers/goal';
 import { useDialog } from '@/hooks/dialog';
 import { handler_GetTransaksi_terbaru } from '@/actions/v2/handlers/transaksi';
-import { TransaksiModel } from '@/types/model/Transaksi';
-import { AkunModel } from '@/types/model/akun';
+import { TransaksiModel } from '@/types/model/transaksi';
 import { GoalModel } from '@/types/model/Goal';
-import { handler_GetStatistik_ringkasan } from '@/actions/v2/handlers/statistik';
+import { handler_GetStatistik_cashflow, handler_GetStatistik_ringkasan } from '@/actions/v2/handlers/statistik';
 import { usePageState } from '@/hooks/pagestate';
 import LoadingP from '@/components/LoadingP';
 import ErrorPage from '@/components/pages/ErrorPage';
+import { StatistikCashflow, StatistikRingkasanBulanIni } from '@/types/response/statistik';
+import { AkunModel } from '@/types/model/Akun';
 
 export default function DashboardPage() {
   const [selectedTrx, setSelectedTrx] = useState<TransaksiModel | null>(null);
@@ -39,8 +35,9 @@ export default function DashboardPage() {
 
   const [listAkun, setListAkun] = useState<AkunModel[]>([]);
   const [recentTransaksi, setRecentTransaksi] = useState<TransaksiModel[]>([]);
-  const [statistikRingkas, setStatistikRingkas] = useState<RingkasanBulanIniResponse | null>(null);
+  const [statistikRingkas, setStatistikRingkas] = useState<StatistikRingkasanBulanIni | null>(null);
   const [recentGoal, setGoalList] = useState<GoalModel[]>([]);
+  const [dataCashflow, setDataCashflow] = useState<StatistikCashflow[]>([]);
 
   const dialogEditAkun = useDialog();
   const dialogEditTransaksi = useDialog();
@@ -57,6 +54,17 @@ export default function DashboardPage() {
       {
         whenSuccess: setListAkun
       }
+    )
+  };
+
+  const fetchCashflow = async (periode: 1 | 2 | 3) => {
+    await handler_GetStatistik_cashflow(
+      {
+        whenSuccess: (data) => {
+          setDataCashflow(data)
+        }
+      },
+      periode
     )
   };
 
@@ -84,7 +92,9 @@ export default function DashboardPage() {
   const fetchDataRingkasanBulanIni = async () => {
     await handler_GetStatistik_ringkasan(
       {
-        whenSuccess: (data) => setStatistikRingkas(data)
+        whenSuccess: (data) => {
+          setStatistikRingkas(data)
+        }
       }
     )
   };
@@ -96,6 +106,7 @@ export default function DashboardPage() {
       await fetchGoal()
       await fetchRecentTransaksi()
       await fetchDataRingkasanBulanIni()
+      await fetchCashflow(1)
       pageState.resetError()
     } catch (err: any) {
       pageState.setError(err.message)
@@ -140,6 +151,7 @@ export default function DashboardPage() {
     fetchData(true);
   }, []);
 
+
   if (pageState.loadingStatus) {
     return <LoadingP />
   }
@@ -181,7 +193,10 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CashflowChartSection />
+          <CashflowChartSection
+            whenChange={fetchCashflow}
+            data={dataCashflow}
+          />
           <TransaksiTerakhirSection
             data={recentTransaksi}
             loading={pageState.loadingStatus}
