@@ -9,6 +9,7 @@ import { PutGoal } from '@/types/request/goal';
 import { handler_PutGoal } from '@/actions/v2/handlers/goal';
 import toast from 'react-hot-toast';
 import { useDialog } from '@/hooks/dialog';
+import Loading from '@/components/Loading';
 
 type Props = {
   isOpen: boolean;
@@ -25,14 +26,15 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
   });
 
   const loading = useDialog()
-  
+
+
   // Reset form saat dialog dibuka
   useEffect(() => {
     if (isOpen && data) {
       setFormData({
         nama: data.nama,
-        target: data.target?data.target.toString() : '',
-        tanggalTarget: data.tanggalTarget?data.tanggalTarget: '',
+        target: data.target ? data.target.toString() : '',
+        tanggalTarget: data.tanggalTarget ? getDateFromISO(data.tanggalTarget) : '',
       });
     } else {
       setFormData({ nama: '', target: '', tanggalTarget: '' });
@@ -56,13 +58,9 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
     {
       name: 'tanggalTarget',
       label: 'Tanggal Target',
-      type: 'date', 
+      type: 'date',
     },
   ];
-
-  useState(() => {}, [
-    f
-  ])
 
   const handleSubmit = async (formValues: Record<string, any>) => {
     const { nama, target, tanggalTarget } = formValues;
@@ -79,15 +77,14 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
       target,
       tanggalTarget,
     }
-
-    console.log("Data yang dikirimkan: " + newData);
-    
+    loading.toggle()
     handler_PutGoal(
       {
         toaster: toast,
         whenSuccess: () => {
           onClose()
           whenSuccess()
+          loading.toggle()
         }
       },
       newData
@@ -105,31 +102,34 @@ export default function DialogEditGoal({ isOpen, data, onClose, whenSuccess }: P
   };
 
   return (
-    <FormDialog
-      isOpen={isOpen}
-      title="Edit Goal"
-      description="Perbarui data goal yang sudah ada."
-      fields={fields}
-      initialData={formData}
-      onCancel={onClose}
-      onSubmit={handleSubmit}
-      submitLabel="Simpan Perubahan"
-      cancelLabel="Batal"
-      extraButtons={[
-        {
-          label: 'Bulan Depan',
-          variant: 'secondary',
-          onClick: () => handlePresetDate(1),
-        },
-        {
-          label: 'Tahun Depan',
-          variant: 'secondary',
-          onClick: () => handlePresetDate(12),
-        },
-      ]}
-      onChange={(name, value) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      }}
-    />
+    <>
+      {loading.isOpen && <Loading />}
+      <FormDialog
+        isOpen={isOpen}
+        title="Edit Goal"
+        description="Perbarui data goal yang sudah ada."
+        fields={fields}
+        initialData={formData}
+        onCancel={onClose}
+        onSubmit={handleSubmit}
+        submitLabel="Simpan Perubahan"
+        cancelLabel="Batal"
+        extraButtons={[
+          {
+            label: 'Bulan Depan',
+            variant: 'secondary',
+            onClick: () => handlePresetDate(1),
+          },
+          {
+            label: 'Tahun Depan',
+            variant: 'secondary',
+            onClick: () => handlePresetDate(12),
+          },
+        ]}
+        onChange={(name, value) => {
+          setFormData((prev) => ({ ...prev, [name]: value }));
+        }}
+      />
+    </>
   );
 }
